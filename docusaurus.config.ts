@@ -3,13 +3,13 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: "Feature Flags Documentation",
-  tagline: "Documentation for Feature Flags Platform",
+  title: "FlagPole - Feature Flags Documentation",
+  tagline: "Documentation for FlagPole Feature Flags Platform",
   favicon: "img/favicon.ico",
-  url: "https://your-domain.com",
+  url: "https://app.useflagpole.dev",
   baseUrl: "/",
-  organizationName: "your-org",
-  projectName: "feature-flags-docs",
+  organizationName: "FlagPole",
+  projectName: "FlagPole feature-flags-docs",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -41,14 +41,21 @@ const config: Config = {
         },
       };
     },
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        hashed: true,
+        language: ["en"],
+      },
+    ],
   ],
   themeConfig: {
     image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "My Site",
+      title: "",
       logo: {
-        alt: "My Site Logo",
-        src: "img/logo.svg",
+        alt: "Flagpole Logo",
+        src: "img/FP_Logo_dark.svg",
       },
       items: [
         // {
@@ -57,9 +64,9 @@ const config: Config = {
         //   position: "left",
         //   label: "Tutorial",
         // },
-        { to: "/blog", label: "Blog", position: "left" },
+        // { to: "/blog", label: "Blog", position: "left" },
         {
-          href: "https://github.com/facebook/docusaurus",
+          href: "https://github.com/flagpole-corp/flagpole-docs",
           label: "GitHub",
           position: "right",
         },
@@ -73,25 +80,25 @@ const config: Config = {
           items: [
             {
               label: "Tutorial",
-              to: "/docs/intro",
+              to: "/",
             },
           ],
         },
         {
           title: "Community",
           items: [
-            {
-              label: "Stack Overflow",
-              href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            },
-            {
-              label: "Discord",
-              href: "https://discordapp.com/invite/docusaurus",
-            },
-            {
-              label: "X",
-              href: "https://x.com/docusaurus",
-            },
+            // {
+            //   label: "Stack Overflow",
+            //   href: "https://stackoverflow.com/questions/tagged/docusaurus",
+            // },
+            // {
+            //   label: "Discord",
+            //   href: "https://discordapp.com/invite/docusaurus",
+            // },
+            // {
+            //   label: "X",
+            //   href: "https://x.com/docusaurus",
+            // },
           ],
         },
         {
@@ -103,12 +110,12 @@ const config: Config = {
             },
             {
               label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
+              href: "https://github.com/flagpole-corp/flagpole-docs",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `${new Date().getFullYear()} FlagPole LLC.`,
     },
     prism: {
       theme: prismThemes.github,

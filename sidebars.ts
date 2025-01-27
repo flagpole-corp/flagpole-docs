@@ -4,7 +4,14 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 const sidebars: SidebarsConfig = {
   docs: [
-    "overview",
+    {
+      type: "doc",
+      id: "overview",
+    },
+    {
+      type: "doc",
+      id: "getting-started",
+    },
     {
       type: "category",
       label: "Client SDKs",

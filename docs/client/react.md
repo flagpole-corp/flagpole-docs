@@ -8,14 +8,34 @@ title: React SDK
 ## Installation
 
 ```bash
-npm install @your-org/feature-flags-react
+npm install @flagpole/client-react
+```
 
-import { useFeatureFlag } from '@your-org/feature-flags-react';
+## Wrapping up main component the SDK
 
-function MyComponent() {
-  const { isEnabled } = useFeatureFlag('my-feature');
+```
+import { FeatureFlagProvider } from "@flagpole/client-react";
 
-  return isEnabled ? <NewFeature /> : <OldFeature />;
+function Main() {
+  <FeatureFlagProvider
+    apiKey="fp_live_your_key"
+    environment="development"
+  >
+    <App />
+  </FeatureFlagProvider>
 }
 
+```
+
+and on your component, you can use one of our hooks to check the status of each feature flag
+
+```
+import { useFeatureFlag, useFeatureFlags } from "@flagpole/client-react-sdk";
+
+function ChildComponent() {
+  const { flags, isLoading, error } = useFeatureFlags();
+  const isNewFeatureEnabled = useFeatureFlag("newFeature");
+
+  <p>New Feature is: {isNewFeatureEnabled ? "Enabled" : "Disabled"}</p>
+}
 ```

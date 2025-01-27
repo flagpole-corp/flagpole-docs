@@ -8,23 +8,42 @@ title: Angular SDK
 ## Installation
 
 ```bash
-npm install @your-org/feature-flags-angular
+npm install @flagpole/client-angular
+```
 
-import { FeatureFlagService } from '@your-org/feature-flags-angular';
+## Set up the module
+
+```
+import { FeatureFlagsModule } from '@flagpole/client-angular';
+
+@NgModule({
+  imports: [
+    FeatureFlagsModule.forRoot({
+      apiKey: 'fp_live_your_key',
+      environment: 'development'
+    })
+  ]
+})
+export class AppModule { }
+```
+
+## Usage in Components
+
+```
+import { FeatureFlagsService } from '@flagpole/client-angular';
 
 @Component({
   selector: 'app-my-component',
   template: `
-    <new-feature *ngIf="isEnabled$ | async; else oldFeature">
-    </new-feature>
-    <ng-template #oldFeature>
-      <old-feature></old-feature>
-    </ng-template>
+    <div *ngIf="isNewFeatureEnabled$ | async">
+      New Feature is Enabled
+    </div>
   `
 })
 export class MyComponent {
-  isEnabled$ = this.featureFlags.isEnabled('my-feature');
+  isNewFeatureEnabled$ = this.featureFlags.isEnabled('newFeature');
+  allFlags$ = this.featureFlags.getAllFlags();
 
-  constructor(private featureFlags: FeatureFlagService) {}
+  constructor(private featureFlags: FeatureFlagsService) {}
 }
 ```
