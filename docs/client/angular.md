@@ -1,6 +1,6 @@
 ---
 id: angular
-title: Angular SDK
+title: Angular
 ---
 
 # Angular SDK Integration

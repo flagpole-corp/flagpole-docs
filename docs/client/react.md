@@ -1,6 +1,6 @@
 ---
 id: react
-title: React SDK
+title: React
 ---
 
 # React SDK Integration

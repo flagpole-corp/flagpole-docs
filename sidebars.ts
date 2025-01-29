@@ -15,12 +15,17 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Client SDKs",
-      items: ["client/react", "client/angular"],
+      items: [
+        "client/react",
+        "client/angular",
+        "client/react-native",
+        "client/flutter",
+      ],
     },
     {
       type: "category",
       label: "Server SDKs",
-      items: ["server/nodejs"],
+      items: ["server/nodejs", "server/python"],
     },
   ],
 };
