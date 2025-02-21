@@ -95,7 +95,6 @@ export default App;
 ### 5. Use Feature Flags
 
 ```typescript
-// components/FeatureComponent.tsx
 import { useFeatureFlag, useFeatureFlags } from "@flagpole/client-react-sdk";
 
 export const FeatureComponent = () => {
