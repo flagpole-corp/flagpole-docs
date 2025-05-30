@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "client/react",
         "client/angular",
+        "client/vue",
         "client/react-native",
         "client/flutter",
       ],

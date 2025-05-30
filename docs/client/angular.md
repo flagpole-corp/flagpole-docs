@@ -9,10 +9,10 @@ title: Angular
 
 ```bash
 # Using npm
-npm install @flagpole/client-angular socket.io-client
+npm install @flagpole/angular socket.io-client
 
 # Using yarn
-yarn add @flagpole/client-angular socket.io-client
+yarn add @flagpole/angular socket.io-client
 ```
 
 ### 4. Initialize in Your Application
@@ -21,7 +21,7 @@ yarn add @flagpole/client-angular socket.io-client
 // app.module.ts
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
-import { FeatureFlagModule } from "@flagpole/client-angular";
+import { FeatureFlagModule } from "@flagpole/angular";
 
 import { AppComponent } from "./app.component";
 
@@ -91,7 +91,7 @@ export class AppModule {}
 // feature.component.ts
 import { Component, OnInit } from "@angular/core";
 import { Observable } from "rxjs";
-import { FeatureFlagService, FeatureFlag } from "@flagpole/client-angular";
+import { FeatureFlagService, FeatureFlag } from "@flagpole/angular";
 
 @Component({
   selector: "app-feature",
@@ -197,7 +197,7 @@ Protect routes based on feature flags:
 // app-routing.module.ts
 import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
-import { FeatureFlagGuard } from "@flagpole/client-angular";
+import { FeatureFlagGuard } from "@flagpole/angular";
 
 const routes: Routes = [
   {

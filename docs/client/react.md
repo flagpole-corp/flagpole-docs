@@ -9,17 +9,17 @@ title: React
 
 ```bash
 # Using npm
-npm install @flagpole/client-react-sdk
+npm install @flagpole/react
 
 # Using yarn
-yarn add @flagpole/client-react-sdk
+yarn add @flagpole/react
 ```
 
 ### 4. Initialize in Your Application
 
 ```typescript
 // App.tsx
-import { FeatureFlagProvider } from "@flagpole/client-react-sdk";
+import { FeatureFlagProvider } from "@flagpole/react";
 
 function App() {
   return (
@@ -40,7 +40,7 @@ export default App;
 #### Basic Hook Usage
 
 ```typescript
-import { useFeatureFlag, useFeatureFlags } from "@flagpole/client-react-sdk";
+import { useFeatureFlag, useFeatureFlags } from "@flagpole/react";
 
 export const FeatureComponent = () => {
   // Get all feature flags
@@ -70,7 +70,7 @@ export const FeatureComponent = () => {
 #### Higher-Order Component (HOC) Usage
 
 ```typescript
-import { withFeatureFlag } from "@flagpole/client-react-sdk";
+import { withFeatureFlag } from "@flagpole/react";
 
 // Component that should only render when flag is enabled
 const NewDashboard = () => {
@@ -105,7 +105,7 @@ function App() {
 #### Feature Wrapper Component
 
 ```typescript
-import { useFeatureFlag } from "@flagpole/client-react-sdk";
+import { useFeatureFlag } from "@flagpole/react";
 
 interface FeatureWrapperProps {
   flagKey: string;
@@ -178,7 +178,7 @@ const WrappedComponent = withFeatureFlag(
 ### Conditional Rendering with Multiple Flags
 
 ```typescript
-import { useFeatureFlags } from "@flagpole/client-react-sdk";
+import { useFeatureFlags } from "@flagpole/react";
 
 const AdvancedFeatureComponent = () => {
   const { isFeatureEnabled } = useFeatureFlags();
@@ -202,7 +202,7 @@ const AdvancedFeatureComponent = () => {
 ### Custom Hook for Complex Logic
 
 ```typescript
-import { useFeatureFlags, useFeatureFlag } from "@flagpole/client-react-sdk";
+import { useFeatureFlags, useFeatureFlag } from "@flagpole/react";
 
 const useNavigation = () => {
   const newNavEnabled = useFeatureFlag("newNavigation");
@@ -251,7 +251,7 @@ const Navigation = () => {
 
 ```typescript
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useFeatureFlag } from "@flagpole/client-react-sdk";
+import { useFeatureFlag } from "@flagpole/react";
 
 const ProtectedRoute = ({ children, flagKey, fallbackPath = "/" }) => {
   const isEnabled = useFeatureFlag(flagKey);
@@ -288,7 +288,7 @@ const AppRoutes = () => {
 
 ```typescript
 import React, { memo } from "react";
-import { useFeatureFlag } from "@flagpole/client-react-sdk";
+import { useFeatureFlag } from "@flagpole/react";
 
 const ExpensiveFeatureComponent = memo(() => {
   const isEnabled = useFeatureFlag("expensiveFeature");
@@ -304,7 +304,7 @@ const ExpensiveFeatureComponent = memo(() => {
 ### A/B Testing Implementation
 
 ```typescript
-import { useFeatureFlags } from "@flagpole/client-react-sdk";
+import { useFeatureFlags } from "@flagpole/react";
 
 const ABTestComponent = () => {
   const { flags } = useFeatureFlags();
@@ -400,7 +400,7 @@ Test both enabled and disabled states:
 ```typescript
 // feature.test.tsx
 import { render } from "@testing-library/react";
-import { FeatureFlagProvider } from "@flagpole/client-react-sdk";
+import { FeatureFlagProvider } from "@flagpole/react";
 
 const MockFeatureFlagProvider = ({ children, flags = {} }) => {
   // Mock provider for testing
@@ -466,7 +466,7 @@ const isNewDashboardEnabled = useTypedFeatureFlag("newDashboard"); // Fully type
 
 ```typescript
 import { lazy, Suspense } from "react";
-import { useFeatureFlag } from "@flagpole/client-react-sdk";
+import { useFeatureFlag } from "@flagpole/react";
 
 // Lazy load expensive components
 const ExpensiveFeature = lazy(() => import("./ExpensiveFeature"));
