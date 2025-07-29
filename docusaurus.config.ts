@@ -25,7 +25,6 @@ const config: Config = {
           routeBasePath: "/",
           editUrl: "https://github.com/flagpole-corp/flagpole-docs/tree/main/",
         },
-        blog: false, // Disable blog if not needed
         theme: {
           customCss: "./src/css/custom.css",
         },
