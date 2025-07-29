@@ -10,6 +10,8 @@ const config: Config = {
   baseUrl: "/",
   organizationName: "FlagPole",
   projectName: "FlagPole feature-flags-docs",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -21,8 +23,13 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           routeBasePath: "/",
+          editUrl: "https://github.com/flagpole-corp/flagpole-docs/tree/main/",
         },
-      },
+        blog: false, // Disable blog if not needed
+        theme: {
+          customCss: "./src/css/custom.css",
+        },
+      } satisfies Preset.Options,
     ],
   ],
   plugins: [
@@ -44,8 +51,50 @@ const config: Config = {
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
-        hashed: true,
+        // Whether to index docs pages
+        docsRouteBasePath: "/",
+
+        // Whether to index blog pages
+        blogRouteBasePath: false, // Disable blog indexing
+
+        // Language for search
         language: ["en"],
+
+        // Hash the search index for better caching
+        hashed: true,
+
+        // Index all content including page title, headings, and body
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+
+        // Remove default stop words for better search
+        removeDefaultStopWordFilter: true,
+
+        // Highlight search results
+        highlightSearchTermsOnTargetPage: true,
+
+        // Search result context length
+        searchResultContextMaxLength: 50,
+
+        // Enable search suggestions
+        explicitSearchResultPath: true,
+
+        // Search bar placeholder
+        searchBarShortcut: true,
+        searchBarShortcutHint: true,
+
+        // Translations
+        translations: {
+          search_placeholder: "Search docs",
+          see_all_results: "See all results",
+          no_results: "No results.",
+          search_results_for: 'Search results for "{{ keyword }}"',
+          search_the_documentation: "Search the documentation",
+          count_documents_found: "{{ count }} document found",
+          count_documents_found_plural: "{{ count }} documents found",
+          no_documents_were_found: "No documents were found",
+        },
       },
     ],
   ],
@@ -56,15 +105,13 @@ const config: Config = {
       logo: {
         alt: "Flagpole Logo",
         src: "img/FP_Logo_dark.svg",
+        srcDark: "img/FP_Logo_light.svg", // Add dark mode logo
       },
       items: [
-        // {
-        //   type: "docSidebar",
-        //   sidebarId: "tutorialSidebar",
-        //   position: "left",
-        //   label: "Tutorial",
-        // },
-        // { to: "/blog", label: "Blog", position: "left" },
+        {
+          type: "search",
+          position: "right",
+        },
         {
           href: "https://github.com/flagpole-corp/flagpole-docs",
           label: "GitHub",
@@ -79,34 +126,38 @@ const config: Config = {
           title: "Docs",
           items: [
             {
-              label: "Tutorial",
-              to: "/",
+              label: "Getting Started",
+              to: "/getting-started",
+            },
+            {
+              label: "Node.js SDK",
+              to: "/server/nodejs",
+            },
+            {
+              label: "React SDK",
+              to: "/client/react",
             },
           ],
         },
         {
           title: "Community",
           items: [
-            // {
-            //   label: "Stack Overflow",
-            //   href: "https://stackoverflow.com/questions/tagged/docusaurus",
-            // },
-            // {
-            //   label: "Discord",
-            //   href: "https://discordapp.com/invite/docusaurus",
-            // },
-            // {
-            //   label: "X",
-            //   href: "https://x.com/docusaurus",
-            // },
+            {
+              label: "Discord",
+              href: "https://discord.gg/flagpole",
+            },
+            {
+              label: "GitHub",
+              href: "https://github.com/flagpole-corp",
+            },
           ],
         },
         {
           title: "More",
           items: [
             {
-              label: "Blog",
-              to: "/blog",
+              label: "Website",
+              href: "https://useflagpole.dev",
             },
             {
               label: "GitHub",
@@ -120,7 +171,15 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      additionalLanguages: ["bash", "json", "typescript", "javascript"],
     },
+    // Add search metadata
+    metadata: [
+      {
+        name: "keywords",
+        content: "feature flags, flagpole, documentation, sdk",
+      },
+    ],
   } satisfies Preset.ThemeConfig,
 };
 
