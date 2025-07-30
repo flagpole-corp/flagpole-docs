@@ -1,7 +1,7 @@
 ---
 slug: react-feature-flags-complete-guide
 title: Mastering Feature Flags in React Applications - A Developer's Guide
-authors: [flagpole-team]
+authors: [vitor]
 tags: [react, feature-flags, javascript, frontend, hooks, components, jsx]
 ---
 
@@ -14,14 +14,14 @@ tags: [react, feature-flags, javascript, frontend, hooks, components, jsx]
 **React**'s component-based architecture makes it ideal for feature flag implementation. You can conditionally render components, modify props, or change application behavior without touching your deployment pipeline.
 
 ```jsx
-import { useFeatureFlag } from '@flagpole/react';
+import { useFeatureFlag } from "@flagpole/react";
 
 function Dashboard() {
-  const showNewChart = useFeatureFlag('enhanced-analytics');
-  const enableDarkMode = useFeatureFlag('dark-mode-ui');
-  
+  const showNewChart = useFeatureFlag("enhanced-analytics");
+  const enableDarkMode = useFeatureFlag("dark-mode-ui");
+
   return (
-    <div className={enableDarkMode ? 'dark-theme' : 'light-theme'}>
+    <div className={enableDarkMode ? "dark-theme" : "light-theme"}>
       <h1>Analytics Dashboard</h1>
       {showNewChart ? <NewChartComponent /> : <LegacyChart />}
     </div>
@@ -45,7 +45,7 @@ yarn add @flagpole/react
 
 ```jsx
 // App.jsx
-import { FeatureFlagProvider } from '@flagpole/react';
+import { FeatureFlagProvider } from "@flagpole/react";
 
 function App() {
   return (
@@ -73,21 +73,19 @@ export default App;
 The most common pattern in **React** applications:
 
 ```jsx
-import { useFeatureFlag } from '@flagpole/react';
+import { useFeatureFlag } from "@flagpole/react";
 
 function ProductCard({ product }) {
-  const showPriceComparison = useFeatureFlag('price-comparison');
-  const enableWishlist = useFeatureFlag('wishlist-feature');
-  
+  const showPriceComparison = useFeatureFlag("price-comparison");
+  const enableWishlist = useFeatureFlag("wishlist-feature");
+
   return (
     <div className="product-card">
       <h3>{product.name}</h3>
       <p>${product.price}</p>
-      
-      {showPriceComparison && (
-        <PriceComparisonWidget productId={product.id} />
-      )}
-      
+
+      {showPriceComparison && <PriceComparisonWidget productId={product.id} />}
+
       {enableWishlist && (
         <button onClick={() => addToWishlist(product.id)}>
           Add to Wishlist
@@ -103,24 +101,24 @@ function ProductCard({ product }) {
 For multiple flags or complex logic:
 
 ```jsx
-import { useFeatureFlags } from '@flagpole/react';
+import { useFeatureFlags } from "@flagpole/react";
 
 function UserProfile() {
   const { flags, isLoading, error, isFeatureEnabled } = useFeatureFlags();
-  
+
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorBoundary error={error} />;
-  
-  const showProfileV2 = isFeatureEnabled('profile-redesign');
-  const enableSocialLogin = isFeatureEnabled('social-authentication');
-  const showAdvancedSettings = isFeatureEnabled('advanced-user-settings');
-  
+
+  const showProfileV2 = isFeatureEnabled("profile-redesign");
+  const enableSocialLogin = isFeatureEnabled("social-authentication");
+  const showAdvancedSettings = isFeatureEnabled("advanced-user-settings");
+
   return (
     <div className="user-profile">
       {showProfileV2 ? <ProfileV2 /> : <ProfileV1 />}
-      
+
       <LoginSection socialLogin={enableSocialLogin} />
-      
+
       {showAdvancedSettings && <AdvancedSettings />}
     </div>
   );
@@ -134,7 +132,7 @@ function UserProfile() {
 Create reusable flag-based components:
 
 ```jsx
-import { withFeatureFlag } from '@flagpole/react';
+import { withFeatureFlag } from "@flagpole/react";
 
 // Component that only renders when flag is enabled
 const BetaFeature = ({ children }) => (
@@ -146,7 +144,7 @@ const BetaFeature = ({ children }) => (
 
 const ConditionalBetaFeature = withFeatureFlag(
   BetaFeature,
-  'beta-features-enabled'
+  "beta-features-enabled"
 );
 
 // Usage
@@ -167,34 +165,36 @@ Build domain-specific feature flag hooks:
 
 ```jsx
 // hooks/useNavigationFlags.js
-import { useFeatureFlag } from '@flagpole/react';
+import { useFeatureFlag } from "@flagpole/react";
 
 export function useNavigationFlags() {
-  const showNewNavbar = useFeatureFlag('redesigned-navigation');
-  const enableSearch = useFeatureFlag('global-search');
-  const showUserMenu = useFeatureFlag('enhanced-user-menu');
-  
+  const showNewNavbar = useFeatureFlag("redesigned-navigation");
+  const enableSearch = useFeatureFlag("global-search");
+  const showUserMenu = useFeatureFlag("enhanced-user-menu");
+
   return {
     showNewNavbar,
     enableSearch,
     showUserMenu,
     navigationConfig: {
-      type: showNewNavbar ? 'v2' : 'v1',
+      type: showNewNavbar ? "v2" : "v1",
       features: {
         search: enableSearch,
-        userMenu: showUserMenu
-      }
-    }
+        userMenu: showUserMenu,
+      },
+    },
   };
 }
 
 // components/Navigation.jsx
 function Navigation() {
   const { navigationConfig } = useNavigationFlags();
-  
-  return navigationConfig.type === 'v2' 
-    ? <NavigationV2 config={navigationConfig} />
-    : <NavigationV1 config={navigationConfig} />;
+
+  return navigationConfig.type === "v2" ? (
+    <NavigationV2 config={navigationConfig} />
+  ) : (
+    <NavigationV1 config={navigationConfig} />
+  );
 }
 ```
 
@@ -203,25 +203,25 @@ function Navigation() {
 Control routes with feature flags:
 
 ```jsx
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useFeatureFlag } from '@flagpole/react';
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useFeatureFlag } from "@flagpole/react";
 
 function AppRoutes() {
-  const enableBetaRoutes = useFeatureFlag('beta-routes');
-  const showAdminPanel = useFeatureFlag('admin-panel-access');
-  
+  const enableBetaRoutes = useFeatureFlag("beta-routes");
+  const showAdminPanel = useFeatureFlag("admin-panel-access");
+
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/products" element={<Products />} />
-      
+
       {enableBetaRoutes && (
         <>
           <Route path="/beta/new-checkout" element={<NewCheckout />} />
           <Route path="/beta/analytics" element={<BetaAnalytics />} />
         </>
       )}
-      
+
       {showAdminPanel ? (
         <Route path="/admin/*" element={<AdminPanel />} />
       ) : (
@@ -238,13 +238,13 @@ function AppRoutes() {
 
 ```jsx
 // store/flagsSlice.js
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const flagsSlice = createSlice({
-  name: 'flags',
+  name: "flags",
   initialState: {
     flags: {},
-    isLoading: false
+    isLoading: false,
   },
   reducers: {
     setFlags: (state, action) => {
@@ -252,20 +252,20 @@ const flagsSlice = createSlice({
     },
     setLoading: (state, action) => {
       state.isLoading = action.payload;
-    }
-  }
+    },
+  },
 });
 
 // Custom hook combining Redux and feature flags
 function useReduxFeatureFlags() {
   const dispatch = useDispatch();
   const { flags } = useFeatureFlags();
-  
+
   useEffect(() => {
     dispatch(setFlags(flags));
   }, [flags, dispatch]);
-  
-  return useSelector(state => state.flags);
+
+  return useSelector((state) => state.flags);
 }
 ```
 
@@ -273,24 +273,25 @@ function useReduxFeatureFlags() {
 
 ```jsx
 // contexts/FeatureContext.js
-import { createContext, useContext } from 'react';
-import { useFeatureFlags } from '@flagpole/react';
+import { createContext, useContext } from "react";
+import { useFeatureFlags } from "@flagpole/react";
 
 const FeatureContext = createContext();
 
 export function FeatureProvider({ children }) {
   const flagData = useFeatureFlags();
-  
+
   const features = {
     ...flagData,
     // Computed feature states
-    isModernUI: flagData.isFeatureEnabled('modern-ui-redesign'),
-    hasAdvancedFeatures: flagData.isFeatureEnabled('advanced-features'),
+    isModernUI: flagData.isFeatureEnabled("modern-ui-redesign"),
+    hasAdvancedFeatures: flagData.isFeatureEnabled("advanced-features"),
     // Feature combinations
-    showPremiumContent: flagData.isFeatureEnabled('premium-content') && 
-                       flagData.isFeatureEnabled('user-subscriptions')
+    showPremiumContent:
+      flagData.isFeatureEnabled("premium-content") &&
+      flagData.isFeatureEnabled("user-subscriptions"),
   };
-  
+
   return (
     <FeatureContext.Provider value={features}>
       {children}
@@ -306,18 +307,18 @@ export const useFeatures = () => useContext(FeatureContext);
 ### Memoization with Feature Flags
 
 ```jsx
-import { useMemo } from 'react';
-import { useFeatureFlag } from '@flagpole/react';
+import { useMemo } from "react";
+import { useFeatureFlag } from "@flagpole/react";
 
 function ExpensiveComponent({ data }) {
-  const enableOptimization = useFeatureFlag('performance-optimization');
-  
+  const enableOptimization = useFeatureFlag("performance-optimization");
+
   const processedData = useMemo(() => {
-    return enableOptimization 
+    return enableOptimization
       ? optimizedDataProcessing(data)
       : standardDataProcessing(data);
   }, [data, enableOptimization]);
-  
+
   return <DataVisualization data={processedData} />;
 }
 ```
@@ -325,18 +326,18 @@ function ExpensiveComponent({ data }) {
 ### Lazy Loading with Feature Flags
 
 ```jsx
-import { lazy, Suspense } from 'react';
-import { useFeatureFlag } from '@flagpole/react';
+import { lazy, Suspense } from "react";
+import { useFeatureFlag } from "@flagpole/react";
 
 // Conditionally load components based on flags
-const AdvancedChart = lazy(() => import('./AdvancedChart'));
-const BasicChart = lazy(() => import('./BasicChart'));
+const AdvancedChart = lazy(() => import("./AdvancedChart"));
+const BasicChart = lazy(() => import("./BasicChart"));
 
 function ChartContainer() {
-  const useAdvancedCharts = useFeatureFlag('advanced-charts');
-  
+  const useAdvancedCharts = useFeatureFlag("advanced-charts");
+
   const ChartComponent = useAdvancedCharts ? AdvancedChart : BasicChart;
-  
+
   return (
     <Suspense fallback={<ChartSkeleton />}>
       <ChartComponent />
@@ -348,38 +349,35 @@ function ChartContainer() {
 ## A/B Testing in React
 
 ```jsx
-import { useFeatureFlags } from '@flagpole/react';
+import { useFeatureFlags } from "@flagpole/react";
 
 function CheckoutPage() {
   const { flags } = useFeatureFlags();
-  const checkoutVariant = flags['checkout-experiment']?.conditions?.variant || 'control';
-  
+  const checkoutVariant =
+    flags["checkout-experiment"]?.conditions?.variant || "control";
+
   const renderCheckoutFlow = () => {
-    switch(checkoutVariant) {
-      case 'single-page':
+    switch (checkoutVariant) {
+      case "single-page":
         return <SinglePageCheckout />;
-      case 'multi-step':
+      case "multi-step":
         return <MultiStepCheckout />;
-      case 'progressive':
+      case "progressive":
         return <ProgressiveCheckout />;
       default:
         return <StandardCheckout />;
     }
   };
-  
+
   // Track experiment exposure
   useEffect(() => {
-    analytics.track('checkout_experiment_viewed', {
+    analytics.track("checkout_experiment_viewed", {
       variant: checkoutVariant,
-      userId: user.id
+      userId: user.id,
     });
   }, [checkoutVariant]);
-  
-  return (
-    <div className="checkout-container">
-      {renderCheckoutFlow()}
-    </div>
-  );
+
+  return <div className="checkout-container">{renderCheckoutFlow()}</div>;
 }
 ```
 
@@ -389,45 +387,42 @@ function CheckoutPage() {
 
 ```jsx
 // __tests__/ProductCard.test.jsx
-import { render, screen } from '@testing-library/react';
-import { FeatureFlagProvider } from '@flagpole/react';
-import ProductCard from '../ProductCard';
+import { render, screen } from "@testing-library/react";
+import { FeatureFlagProvider } from "@flagpole/react";
+import ProductCard from "../ProductCard";
 
 // Mock the feature flag provider
 const MockFeatureFlagProvider = ({ flags, children }) => (
-  <FeatureFlagProvider 
-    apiKey="test-key"
-    mockFlags={flags}
-  >
+  <FeatureFlagProvider apiKey="test-key" mockFlags={flags}>
     {children}
   </FeatureFlagProvider>
 );
 
-describe('ProductCard', () => {
+describe("ProductCard", () => {
   const mockProduct = {
     id: 1,
-    name: 'Test Product',
-    price: 99.99
+    name: "Test Product",
+    price: 99.99,
   };
 
-  it('shows wishlist button when flag is enabled', () => {
+  it("shows wishlist button when flag is enabled", () => {
     render(
-      <MockFeatureFlagProvider flags={{ 'wishlist-feature': true }}>
+      <MockFeatureFlagProvider flags={{ "wishlist-feature": true }}>
         <ProductCard product={mockProduct} />
       </MockFeatureFlagProvider>
     );
-    
-    expect(screen.getByText('Add to Wishlist')).toBeInTheDocument();
+
+    expect(screen.getByText("Add to Wishlist")).toBeInTheDocument();
   });
 
-  it('hides wishlist button when flag is disabled', () => {
+  it("hides wishlist button when flag is disabled", () => {
     render(
-      <MockFeatureFlagProvider flags={{ 'wishlist-feature': false }}>
+      <MockFeatureFlagProvider flags={{ "wishlist-feature": false }}>
         <ProductCard product={mockProduct} />
       </MockFeatureFlagProvider>
     );
-    
-    expect(screen.queryByText('Add to Wishlist')).not.toBeInTheDocument();
+
+    expect(screen.queryByText("Add to Wishlist")).not.toBeInTheDocument();
   });
 });
 ```
@@ -436,15 +431,15 @@ describe('ProductCard', () => {
 
 ```jsx
 // stories/ProductCard.stories.jsx
-import ProductCard from '../ProductCard';
-import { FeatureFlagProvider } from '@flagpole/react';
+import ProductCard from "../ProductCard";
+import { FeatureFlagProvider } from "@flagpole/react";
 
 export default {
-  title: 'Components/ProductCard',
+  title: "Components/ProductCard",
   component: ProductCard,
   decorators: [
     (Story, context) => (
-      <FeatureFlagProvider 
+      <FeatureFlagProvider
         apiKey="storybook-key"
         mockFlags={context.args.flags}
       >
@@ -456,46 +451,42 @@ export default {
 
 export const WithWishlist = {
   args: {
-    product: { id: 1, name: 'Sample Product', price: 29.99 },
-    flags: { 'wishlist-feature': true }
-  }
+    product: { id: 1, name: "Sample Product", price: 29.99 },
+    flags: { "wishlist-feature": true },
+  },
 };
 
 export const WithoutWishlist = {
   args: {
-    product: { id: 1, name: 'Sample Product', price: 29.99 },
-    flags: { 'wishlist-feature': false }
-  }
+    product: { id: 1, name: "Sample Product", price: 29.99 },
+    flags: { "wishlist-feature": false },
+  },
 };
 ```
 
 ## Error Handling and Fallbacks
 
 ```jsx
-import { useFeatureFlags } from '@flagpole/react';
+import { useFeatureFlags } from "@flagpole/react";
 
 function RobustComponent() {
   const { flags, isLoading, error } = useFeatureFlags();
-  
+
   // Loading state
   if (isLoading) {
     return <ComponentSkeleton />;
   }
-  
+
   // Error state with graceful fallback
   if (error) {
-    console.warn('Feature flags unavailable, using defaults:', error);
+    console.warn("Feature flags unavailable, using defaults:", error);
     return <DefaultComponent />;
   }
-  
+
   // Feature flag evaluation with fallbacks
-  const showNewFeature = flags?.['new-feature']?.isEnabled ?? false;
-  
-  return (
-    <div>
-      {showNewFeature ? <NewFeature /> : <LegacyFeature />}
-    </div>
-  );
+  const showNewFeature = flags?.["new-feature"]?.isEnabled ?? false;
+
+  return <div>{showNewFeature ? <NewFeature /> : <LegacyFeature />}</div>;
 }
 ```
 
@@ -505,13 +496,13 @@ function RobustComponent() {
 
 ```jsx
 // features/UserDashboard/index.jsx
-import { useFeatureFlag } from '@flagpole/react';
-import DashboardV1 from './DashboardV1';
-import DashboardV2 from './DashboardV2';
+import { useFeatureFlag } from "@flagpole/react";
+import DashboardV1 from "./DashboardV1";
+import DashboardV2 from "./DashboardV2";
 
 export default function UserDashboard() {
-  const useNewDashboard = useFeatureFlag('dashboard-redesign');
-  
+  const useNewDashboard = useFeatureFlag("dashboard-redesign");
+
   return useNewDashboard ? <DashboardV2 /> : <DashboardV1 />;
 }
 ```
@@ -520,9 +511,9 @@ export default function UserDashboard() {
 
 ```jsx
 // Good flag names for React components
-const enableModal = useFeatureFlag('enhanced-modal-component');
-const showTooltips = useFeatureFlag('ui-helpful-tooltips');
-const useNewRouter = useFeatureFlag('react-router-v7-migration');
+const enableModal = useFeatureFlag("enhanced-modal-component");
+const showTooltips = useFeatureFlag("ui-helpful-tooltips");
+const useNewRouter = useFeatureFlag("react-router-v7-migration");
 ```
 
 ### 3. TypeScript Integration
@@ -530,9 +521,9 @@ const useNewRouter = useFeatureFlag('react-router-v7-migration');
 ```typescript
 // types/flags.ts
 export interface FeatureFlags {
-  'new-checkout-flow': boolean;
-  'dark-mode-toggle': boolean;
-  'advanced-search': boolean;
+  "new-checkout-flow": boolean;
+  "dark-mode-toggle": boolean;
+  "advanced-search": boolean;
 }
 
 // Custom typed hook
@@ -543,7 +534,7 @@ export const useTypedFeatureFlag = <K extends keyof FeatureFlags>(
 };
 
 // Usage with full type safety
-const isDarkMode = useTypedFeatureFlag('dark-mode-toggle');
+const isDarkMode = useTypedFeatureFlag("dark-mode-toggle");
 ```
 
 ## Real-World React Examples
@@ -552,15 +543,15 @@ const isDarkMode = useTypedFeatureFlag('dark-mode-toggle');
 
 ```jsx
 function ProductPage({ productId }) {
-  const showReviews = useFeatureFlag('product-reviews');
-  const enableRecommendations = useFeatureFlag('product-recommendations');
-  const showARPreview = useFeatureFlag('ar-product-preview');
-  
+  const showReviews = useFeatureFlag("product-reviews");
+  const enableRecommendations = useFeatureFlag("product-recommendations");
+  const showARPreview = useFeatureFlag("ar-product-preview");
+
   return (
     <div className="product-page">
       <ProductImages productId={productId} />
       <ProductDetails productId={productId} />
-      
+
       {showARPreview && <ARPreviewButton productId={productId} />}
       {showReviews && <ProductReviews productId={productId} />}
       {enableRecommendations && <RecommendedProducts productId={productId} />}
@@ -573,14 +564,14 @@ function ProductPage({ productId }) {
 
 ```jsx
 function SocialFeed() {
-  const showStories = useFeatureFlag('instagram-stories');
-  const enableLiveVideo = useFeatureFlag('live-video-streaming');
-  const useInfiniteScroll = useFeatureFlag('infinite-scroll-feed');
-  
+  const showStories = useFeatureFlag("instagram-stories");
+  const enableLiveVideo = useFeatureFlag("live-video-streaming");
+  const useInfiniteScroll = useFeatureFlag("infinite-scroll-feed");
+
   return (
     <div className="social-feed">
       {showStories && <StoriesBar />}
-      
+
       <FeedContainer infiniteScroll={useInfiniteScroll}>
         <FeedPosts />
         {enableLiveVideo && <LiveVideoSection />}
@@ -599,7 +590,7 @@ npm install @flagpole/react
 ```
 
 ```jsx
-import { FeatureFlagProvider, useFeatureFlag } from '@flagpole/react';
+import { FeatureFlagProvider, useFeatureFlag } from "@flagpole/react";
 
 function App() {
   return (
@@ -610,7 +601,7 @@ function App() {
 }
 
 function YourReactApp() {
-  const newFeature = useFeatureFlag('amazing-new-feature');
+  const newFeature = useFeatureFlag("amazing-new-feature");
   return newFeature ? <NewComponent /> : <OldComponent />;
 }
 ```
@@ -620,7 +611,7 @@ function YourReactApp() {
 Feature flags transform how you build **React** applications by providing:
 
 - **Safe deployments** with instant rollback capabilities
-- **A/B testing** for data-driven UI decisions  
+- **A/B testing** for data-driven UI decisions
 - **Gradual rollouts** for new **React** components
 - **Better user experiences** through personalization
 - **Faster development** with parallel feature development
@@ -631,4 +622,4 @@ Start implementing feature flags in your **React** app today with FlagPole. Your
 
 ---
 
-*Keywords: React, feature flags, React hooks, JSX, JavaScript, frontend, components, React Router, Redux, state management, A/B testing, conditional rendering*
+_Keywords: React, feature flags, React hooks, JSX, JavaScript, frontend, components, React Router, Redux, state management, A/B testing, conditional rendering_

@@ -10,8 +10,6 @@ const config: Config = {
   baseUrl: "/",
   organizationName: "FlagPole",
   projectName: "FlagPole feature-flags-docs",
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -22,8 +20,21 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          routeBasePath: "/",
+          routeBasePath: "/docs", // Changed from "/" to "/docs"
           editUrl: "https://github.com/flagpole-corp/flagpole-docs/tree/main/",
+        },
+        // Enable blog
+        blog: {
+          showReadingTime: true,
+          readingTime: ({ content, frontMatter, defaultReadingTime }) =>
+            defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
+          editUrl: "https://github.com/flagpole-corp/flagpole-docs/tree/main/",
+          blogTitle: "FlagPole Blog",
+          blogDescription:
+            "Feature flags insights, tutorials, and best practices",
+          postsPerPage: "ALL",
+          blogSidebarTitle: "All posts",
+          blogSidebarCount: "ALL",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -50,50 +61,19 @@ const config: Config = {
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
-        // Whether to index docs pages
-        docsRouteBasePath: "/",
-
-        // Whether to index blog pages
-        blogRouteBasePath: false, // Disable blog indexing
-
-        // Language for search
-        language: ["en"],
-
-        // Hash the search index for better caching
         hashed: true,
-
-        // Index all content including page title, headings, and body
+        language: ["en"],
+        docsRouteBasePath: "/docs",
+        blogRouteBasePath: "/blog", // Fixed: use string instead of false
         indexDocs: true,
-        indexBlog: false,
+        indexBlog: true, // Enable blog indexing
         indexPages: false,
-
-        // Remove default stop words for better search
         removeDefaultStopWordFilter: true,
-
-        // Highlight search results
         highlightSearchTermsOnTargetPage: true,
-
-        // Search result context length
         searchResultContextMaxLength: 50,
-
-        // Enable search suggestions
         explicitSearchResultPath: true,
-
-        // Search bar placeholder
         searchBarShortcut: true,
         searchBarShortcutHint: true,
-
-        // Translations
-        translations: {
-          search_placeholder: "Search docs",
-          see_all_results: "See all results",
-          no_results: "No results.",
-          search_results_for: 'Search results for "{{ keyword }}"',
-          search_the_documentation: "Search the documentation",
-          count_documents_found: "{{ count }} document found",
-          count_documents_found_plural: "{{ count }} documents found",
-          no_documents_were_found: "No documents were found",
-        },
       },
     ],
   ],
@@ -104,9 +84,21 @@ const config: Config = {
       logo: {
         alt: "Flagpole Logo",
         src: "img/FP_Logo_dark.svg",
-        srcDark: "img/FP_Logo_light.svg", // Add dark mode logo
+        srcDark: "img/FP_Logo_light.svg",
       },
       items: [
+        {
+          type: "docSidebar",
+          sidebarId: "docs",
+          position: "left",
+          label: "Docs",
+        },
+        // Add Blog link to navbar
+        {
+          to: "/blog",
+          label: "Blog",
+          position: "left",
+        },
         {
           type: "search",
           position: "right",
@@ -126,15 +118,15 @@ const config: Config = {
           items: [
             {
               label: "Getting Started",
-              to: "/getting-started",
+              to: "/docs/getting-started",
             },
             {
               label: "Node.js SDK",
-              to: "/server/nodejs",
+              to: "/docs/server/nodejs",
             },
             {
               label: "React SDK",
-              to: "/client/react",
+              to: "/docs/client/react",
             },
           ],
         },
@@ -154,6 +146,11 @@ const config: Config = {
         {
           title: "More",
           items: [
+            // Add blog link to footer
+            {
+              label: "Blog",
+              to: "/blog",
+            },
             {
               label: "Website",
               href: "https://useflagpole.dev",
@@ -170,15 +167,7 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
-      additionalLanguages: ["bash", "json", "typescript", "javascript"],
     },
-    // Add search metadata
-    metadata: [
-      {
-        name: "keywords",
-        content: "feature flags, flagpole, documentation, sdk",
-      },
-    ],
   } satisfies Preset.ThemeConfig,
 };
 
