@@ -25,7 +25,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
-          routeBasePath: "/docs", // Changed from "/" to "/docs"
+          routeBasePath: "/", // Changed from "/" to "/docs"
           editUrl: "https://github.com/flagpole-corp/flagpole-docs/tree/main/",
         },
         // Enable blog

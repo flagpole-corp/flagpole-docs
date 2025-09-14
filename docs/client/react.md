@@ -5,29 +5,57 @@ title: React
 
 # React SDK Integration
 
-### 3. Install the SDK
+The FlagPole React SDK provides seamless integration of feature flags into your React applications with real-time updates, TypeScript support, and developer-friendly APIs.
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Advanced Usage](#advanced-usage)
+- [Best Practices](#best-practices)
+- [TypeScript Support](#typescript-support)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+
+## Installation
+
+### Using npm
 
 ```bash
-# Using npm
 npm install @flagpole/react
+```
 
-# Using yarn
+### Using yarn
+
+```bash
 yarn add @flagpole/react
 ```
 
-### 4. Initialize in Your Application
+### Requirements
+
+- React >= 16.8.0 (hooks support required)
+- socket.io-client >= 4.0.0
+
+## Quick Start
+
+### 1. Wrap Your Application
+
+Initialize the SDK by wrapping your root component with `FeatureFlagProvider`:
 
 ```typescript
 // App.tsx
+import React from "react";
 import { FeatureFlagProvider } from "@flagpole/react";
+import MainApp from "./MainApp";
 
 function App() {
   return (
     <FeatureFlagProvider
       apiKey="fp_live_your_api_key"
-      environments={["development"]} // optional, if nothing is passed, then all environments will be shown (production, staging and development)
+      environments={["development"]} // Optional: defaults to all environments
     >
-      <FeatureComponent />
+      <MainApp />
     </FeatureFlagProvider>
   );
 }
@@ -35,91 +63,249 @@ function App() {
 export default App;
 ```
 
-### 5. Use Feature Flags
-
-#### Basic Hook Usage
+### 2. Use Feature Flags in Components
 
 ```typescript
+import React from "react";
 import { useFeatureFlag, useFeatureFlags } from "@flagpole/react";
 
 export const FeatureComponent = () => {
-  // Get all feature flags
+  // Get all feature flags and metadata
   const { flags, isLoading, error } = useFeatureFlags();
 
   // Get a specific feature flag
   const isNewFeatureEnabled = useFeatureFlag("newFeature");
+  const showBetaUI = useFeatureFlag("betaUserInterface");
 
   if (isLoading) return <div>Loading flags...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
-      <h2>Feature Flags Test</h2>
+      <h2>My Application</h2>
 
-      {/* Use a specific flag */}
-      {isNewFeatureEnabled && <NewFeature />}
+      {/* Conditional rendering based on flags */}
+      {isNewFeatureEnabled && (
+        <div className="new-feature">
+          <h3>🎉 New Feature Available!</h3>
+          <NewFeatureComponent />
+        </div>
+      )}
 
-      {/* Display all available flags */}
-      <h3>All Flags:</h3>
-      <pre>{JSON.stringify(flags, null, 2)}</pre>
+      {showBetaUI ? <BetaUserInterface /> : <StandardUserInterface />}
+
+      {/* Debug panel for development */}
+      {process.env.NODE_ENV === "development" && (
+        <details>
+          <summary>Feature Flags Debug</summary>
+          <pre>{JSON.stringify(flags, null, 2)}</pre>
+        </details>
+      )}
     </div>
   );
 };
 ```
 
-#### Higher-Order Component (HOC) Usage
+## API Reference
+
+### FeatureFlagProvider
+
+The main provider component that manages feature flag state and WebSocket connections.
+
+#### Props
+
+| Prop           | Type      | Required | Default          | Description                              |
+| -------------- | --------- | -------- | ---------------- | ---------------------------------------- |
+| `apiKey`       | string    | ✅       | -                | Your FlagPole API key                    |
+| `environments` | string[]  | ❌       | All environments | Array of environments to load flags from |
+| `children`     | ReactNode | ✅       | -                | Your application components              |
+
+#### Example
 
 ```typescript
-import { withFeatureFlag } from "@flagpole/react";
+<FeatureFlagProvider
+  apiKey="fp_live_abc123..."
+  environments={["production", "staging"]}
+>
+  <App />
+</FeatureFlagProvider>
+```
 
-// Component that should only render when flag is enabled
-const NewDashboard = () => {
-  return <div>New Dashboard Feature!</div>;
-};
+### useFeatureFlag
 
-// Wrap component with feature flag
-const ConditionalDashboard = withFeatureFlag(NewDashboard, "newDashboard");
+Hook to check if a specific feature flag is enabled.
 
-// With fallback component
-const OldDashboard = () => {
-  return <div>Old Dashboard</div>;
-};
+#### Parameters
 
-const DashboardWithFallback = withFeatureFlag(
-  NewDashboard,
-  "newDashboard",
-  OldDashboard
-);
+- `flagName` (string): The name of the feature flag
 
-// Usage in your app
-function App() {
+#### Returns
+
+- `boolean`: True if enabled, false otherwise
+
+#### Example
+
+```typescript
+function MyComponent() {
+  const isEnabled = useFeatureFlag("my-awesome-feature");
+
+  return <div>{isEnabled ? <NewFeature /> : <LegacyFeature />}</div>;
+}
+```
+
+### useFeatureFlags
+
+Hook to access all feature flags and metadata.
+
+#### Returns
+
+```typescript
+{
+  flags: Record<string, FeatureFlag>;
+  isLoading: boolean;
+  error: Error | null;
+  isFeatureEnabled: (flagName: string) => boolean;
+}
+```
+
+#### Example
+
+```typescript
+function DebugPanel() {
+  const { flags, isLoading, error, isFeatureEnabled } = useFeatureFlags();
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
   return (
     <div>
-      <ConditionalDashboard />
-      <DashboardWithFallback />
+      <h3>Feature Flags Status</h3>
+      {Object.entries(flags).map(([name, flag]) => (
+        <div key={name}>
+          <strong>{name}:</strong> {flag.isEnabled ? "✅" : "❌"}
+          <br />
+          <small>Environments: {flag.environments?.join(", ")}</small>
+        </div>
+      ))}
     </div>
   );
 }
 ```
 
-#### Feature Wrapper Component
+### withFeatureFlag
+
+Higher-order component for conditional rendering based on feature flags.
+
+#### Parameters
+
+- `WrappedComponent`: React component to conditionally render
+- `flagName`: Feature flag name to check
+- `FallbackComponent` (optional): Component to render when flag is disabled
+
+#### Example
 
 ```typescript
-import { useFeatureFlag } from "@flagpole/react";
+import { withFeatureFlag } from "@flagpole/react";
 
+const PremiumDashboard = () => (
+  <div>
+    <h2>Premium Dashboard</h2>
+    <PremiumFeatures />
+  </div>
+);
+
+const StandardDashboard = () => (
+  <div>
+    <h2>Standard Dashboard</h2>
+    <BasicFeatures />
+  </div>
+);
+
+// Only show PremiumDashboard when 'premium-features' flag is enabled
+export const ConditionalDashboard = withFeatureFlag(
+  PremiumDashboard,
+  "premium-features",
+  StandardDashboard // Fallback component
+);
+
+// Usage
+function App() {
+  return (
+    <div>
+      <ConditionalDashboard />
+    </div>
+  );
+}
+```
+
+## Advanced Usage
+
+### Environment-Specific Configuration
+
+Configure different environments for development, staging, and production:
+
+```typescript
+// config/flagpole.ts
+export const getFlagpoleConfig = () => {
+  const environment = process.env.NODE_ENV;
+
+  switch (environment) {
+    case "development":
+      return {
+        apiKey: process.env.REACT_APP_FLAGPOLE_DEV_KEY!,
+        environments: ["development"],
+      };
+    case "staging":
+      return {
+        apiKey: process.env.REACT_APP_FLAGPOLE_STAGING_KEY!,
+        environments: ["staging"],
+      };
+    case "production":
+      return {
+        apiKey: process.env.REACT_APP_FLAGPOLE_PROD_KEY!,
+        environments: ["production"],
+      };
+    default:
+      throw new Error(`Unknown environment: ${environment}`);
+  }
+};
+
+// App.tsx
+import { getFlagpoleConfig } from "./config/flagpole";
+
+function App() {
+  const config = getFlagpoleConfig();
+
+  return (
+    <FeatureFlagProvider {...config}>
+      <MainApp />
+    </FeatureFlagProvider>
+  );
+}
+```
+
+### Feature Wrapper Component
+
+Create reusable wrapper for conditional rendering:
+
+```typescript
 interface FeatureWrapperProps {
   flagKey: string;
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  loading?: React.ReactNode;
 }
 
 const FeatureWrapper: React.FC<FeatureWrapperProps> = ({
   flagKey,
   children,
   fallback = null,
+  loading = null,
 }) => {
+  const { isLoading } = useFeatureFlags();
   const isEnabled = useFeatureFlag(flagKey);
 
+  if (isLoading) return <>{loading}</>;
   return isEnabled ? <>{children}</> : <>{fallback}</>;
 };
 
@@ -129,7 +315,8 @@ const MyComponent = () => {
     <div>
       <FeatureWrapper
         flagKey="premiumFeature"
-        fallback={<div>Premium feature not available</div>}
+        fallback={<div>Upgrade to premium to access this feature</div>}
+        loading={<div>Loading feature...</div>}
       >
         <PremiumContent />
       </FeatureWrapper>
@@ -138,44 +325,9 @@ const MyComponent = () => {
 };
 ```
 
-## Available Hooks and Components
+### Complex Conditional Logic
 
-### useFeatureFlags
-
-Returns all feature flags for the current project:
-
-```typescript
-const {
-  flags, // Record<string, FeatureFlag> containing all flags
-  isLoading, // Boolean indicating loading state
-  error, // Error object if something went wrong
-  isFeatureEnabled, // Function to check specific flag: (flagName: string) => boolean
-} = useFeatureFlags();
-```
-
-### useFeatureFlag
-
-Returns the state of a specific feature flag:
-
-```typescript
-const isEnabled = useFeatureFlag("flagKey"); // Returns boolean
-```
-
-### withFeatureFlag
-
-Higher-order component that conditionally renders based on feature flag:
-
-```typescript
-const WrappedComponent = withFeatureFlag(
-  YourComponent,
-  "featureFlagName",
-  OptionalFallbackComponent
-);
-```
-
-## Advanced Usage Patterns
-
-### Conditional Rendering with Multiple Flags
+Handle multiple flags with complex logic:
 
 ```typescript
 import { useFeatureFlags } from "@flagpole/react";
@@ -186,45 +338,79 @@ const AdvancedFeatureComponent = () => {
   const showAdvancedUI = isFeatureEnabled("advancedUI");
   const showBetaFeatures = isFeatureEnabled("betaFeatures");
   const showPremiumContent = isFeatureEnabled("premiumContent");
+  const isUserPremium = isFeatureEnabled("userPremiumStatus");
+
+  // Complex conditional logic
+  const shouldShowPremiumBeta =
+    showBetaFeatures && showPremiumContent && isUserPremium;
+  const uiVariant = showAdvancedUI ? "advanced" : "standard";
 
   return (
-    <div>
-      {showAdvancedUI && <AdvancedUIComponent />}
+    <div className={`ui-${uiVariant}`}>
+      {shouldShowPremiumBeta && <PremiumBetaFeature />}
 
-      {showBetaFeatures && showPremiumContent && <PremiumBetaFeature />}
+      {showAdvancedUI ? <AdvancedUIComponent /> : <StandardUIComponent />}
 
-      {!showAdvancedUI && <StandardUIComponent />}
+      {showBetaFeatures && !isUserPremium && <BetaFeaturePreview />}
     </div>
   );
 };
 ```
 
-### Custom Hook for Complex Logic
+### Custom Hook for Navigation
+
+Create domain-specific hooks:
 
 ```typescript
+import { useMemo } from "react";
 import { useFeatureFlags, useFeatureFlag } from "@flagpole/react";
+
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon?: string;
+  badge?: string;
+}
 
 const useNavigation = () => {
   const newNavEnabled = useFeatureFlag("newNavigation");
   const adminPanelEnabled = useFeatureFlag("adminPanel");
+  const betaFeaturesEnabled = useFeatureFlag("betaFeatures");
   const { isLoading } = useFeatureFlags();
 
-  const navigationItems = useMemo(() => {
-    const items = [
-      { label: "Home", path: "/" },
-      { label: "About", path: "/about" },
+  const navigationItems: NavigationItem[] = useMemo(() => {
+    const items: NavigationItem[] = [
+      { label: "Home", path: "/", icon: "home" },
+      { label: "About", path: "/about", icon: "info" },
     ];
 
     if (newNavEnabled) {
-      items.push({ label: "Dashboard", path: "/dashboard" });
+      items.push({
+        label: "Dashboard",
+        path: "/dashboard",
+        icon: "dashboard",
+      });
     }
 
     if (adminPanelEnabled) {
-      items.push({ label: "Admin", path: "/admin" });
+      items.push({
+        label: "Admin",
+        path: "/admin",
+        icon: "admin",
+      });
+    }
+
+    if (betaFeaturesEnabled) {
+      items.push({
+        label: "Beta",
+        path: "/beta",
+        icon: "lab",
+        badge: "NEW",
+      });
     }
 
     return items;
-  }, [newNavEnabled, adminPanelEnabled]);
+  }, [newNavEnabled, adminPanelEnabled, betaFeaturesEnabled]);
 
   return { navigationItems, isLoading };
 };
@@ -238,8 +424,10 @@ const Navigation = () => {
   return (
     <nav>
       {navigationItems.map((item) => (
-        <a key={item.path} href={item.path}>
+        <a key={item.path} href={item.path} className="nav-item">
+          <span className={`icon-${item.icon}`} />
           {item.label}
+          {item.badge && <span className="badge">{item.badge}</span>}
         </a>
       ))}
     </nav>
@@ -249,33 +437,59 @@ const Navigation = () => {
 
 ### React Router Integration
 
+Protect routes with feature flags:
+
 ```typescript
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useFeatureFlag } from "@flagpole/react";
 
-const ProtectedRoute = ({ children, flagKey, fallbackPath = "/" }) => {
+const ProtectedRoute = ({
+  children,
+  flagKey,
+  fallbackPath = "/",
+  fallbackComponent,
+}) => {
   const isEnabled = useFeatureFlag(flagKey);
 
-  return isEnabled ? children : <Navigate to={fallbackPath} replace />;
+  if (!isEnabled) {
+    if (fallbackComponent) return fallbackComponent;
+    return <Navigate to={fallbackPath} replace />;
+  }
+
+  return children;
 };
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+
       <Route
-        path="/beta"
+        path="/beta/*"
         element={
-          <ProtectedRoute flagKey="betaAccess" fallbackPath="/coming-soon">
-            <BetaFeature />
+          <ProtectedRoute
+            flagKey="betaAccess"
+            fallbackComponent={<ComingSoonPage />}
+          >
+            <BetaFeatures />
           </ProtectedRoute>
         }
       />
+
       <Route
-        path="/admin"
+        path="/admin/*"
         element={
           <ProtectedRoute flagKey="adminPanel" fallbackPath="/unauthorized">
             <AdminPanel />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/premium/*"
+        element={
+          <ProtectedRoute flagKey="premiumFeatures">
+            <PremiumSection />
           </ProtectedRoute>
         }
       />
@@ -284,24 +498,9 @@ const AppRoutes = () => {
 };
 ```
 
-### Performance Optimization with React.memo
-
-```typescript
-import React, { memo } from "react";
-import { useFeatureFlag } from "@flagpole/react";
-
-const ExpensiveFeatureComponent = memo(() => {
-  const isEnabled = useFeatureFlag("expensiveFeature");
-
-  if (!isEnabled) return null;
-
-  return <div>{/* Expensive rendering logic */}</div>;
-});
-
-// Component only re-renders when flag state changes
-```
-
 ### A/B Testing Implementation
+
+Handle A/B testing scenarios:
 
 ```typescript
 import { useFeatureFlags } from "@flagpole/react";
@@ -309,184 +508,219 @@ import { useFeatureFlags } from "@flagpole/react";
 const ABTestComponent = () => {
   const { flags } = useFeatureFlags();
 
+  // Access full flag data for A/B testing
   const experimentFlag = flags["checkoutExperiment"];
   const variant = experimentFlag?.conditions?.variant || "control";
+  const percentage = experimentFlag?.conditions?.percentage || 0;
+
+  // Log experiment exposure for analytics
+  useEffect(() => {
+    if (experimentFlag?.isEnabled) {
+      analytics.track("experiment_exposure", {
+        experiment: "checkoutExperiment",
+        variant,
+        percentage,
+      });
+    }
+  }, [variant, percentage, experimentFlag?.isEnabled]);
 
   switch (variant) {
     case "variantA":
       return <CheckoutVariantA />;
     case "variantB":
       return <CheckoutVariantB />;
+    case "control":
     default:
       return <CheckoutControl />;
   }
 };
 ```
 
-## Best Practices
+### Real-time Updates Handling
 
-### API Key Security
-
-- Store API keys in environment variables
-- Use different keys for different environments
-- Never commit API keys to source control
-- Rotate keys if they're ever exposed
+React to real-time flag changes:
 
 ```typescript
-// Example using environment variables
+function LiveConfigPanel() {
+  const { flags } = useFeatureFlags();
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  // Track when flags change
+  useEffect(() => {
+    setLastUpdate(new Date());
+  }, [flags]);
+
+  // Show notification when flags update
+  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
+
+  useEffect(() => {
+    setShowUpdateNotification(true);
+    const timer = setTimeout(() => setShowUpdateNotification(false), 3000);
+    return () => clearTimeout(timer);
+  }, [flags]);
+
+  return (
+    <div>
+      {showUpdateNotification && (
+        <div className="notification">Feature flags updated! 🎉</div>
+      )}
+
+      <div>
+        <small>Last updated: {lastUpdate.toLocaleTimeString()}</small>
+        <div>Active flags: {Object.keys(flags).length}</div>
+      </div>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### 1. API Key Security
+
+**Environment Variables**
+
+```typescript
+// .env.development
+REACT_APP_FLAGPOLE_API_KEY=fp_dev_your_dev_key
+
+// .env.production
+REACT_APP_FLAGPOLE_API_KEY=fp_live_your_prod_key
+
+// App.tsx
 <FeatureFlagProvider
-  apiKey={import.meta.env.VITE_FLAGPOLE_API_KEY}
-  environments={import.meta.env.VITE_ENVIRONMENT ? [import.meta.env.VITE_ENVIRONMENT] : undefined}
+  apiKey={process.env.REACT_APP_FLAGPOLE_API_KEY!}
+  environments={process.env.NODE_ENV === 'development' ? ['development'] : ['production']}
 >
 ```
 
-### Error Handling
+**Security Checklist**
+
+- ✅ Store API keys in environment variables
+- ✅ Use different keys for different environments
+- ✅ Never commit API keys to source control
+- ✅ Rotate keys if they're ever exposed
+- ✅ Use read-only client keys (not admin keys)
+
+### 2. Error Handling
 
 Always handle loading and error states:
 
 ```typescript
-const { flags, isLoading, error } = useFeatureFlags();
+const RobustFeatureComponent = () => {
+  const { flags, isLoading, error } = useFeatureFlags();
 
-if (isLoading) {
-  return <LoadingSpinner />;
-}
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="loading">
+        <div className="spinner" />
+        <span>Loading features...</span>
+      </div>
+    );
+  }
 
-if (error) {
-  return (
-    <ErrorBoundary>
-      <ErrorMessage
-        message={error.message}
-        onRetry={() => window.location.reload()}
-      />
-    </ErrorBoundary>
-  );
-}
-```
+  // Error state with retry
+  if (error) {
+    return (
+      <div className="error">
+        <p>Failed to load feature flags: {error.message}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
 
-### Loading States with Suspense
-
-```typescript
-import { Suspense } from "react";
-
-const App = () => {
-  return (
-    <FeatureFlagProvider apiKey="your-api-key">
-      <Suspense fallback={<div>Loading feature flags...</div>}>
-        <MainApp />
-      </Suspense>
-    </FeatureFlagProvider>
-  );
+  // Success state
+  return <YourFeatureContent />;
 };
 ```
 
-### Feature Flag Naming
+### 3. Performance Optimization
 
-Use descriptive, consistent names:
-
-- Include feature context
-- Use camelCase
-- Be specific but concise
-
-Examples:
-
-- `newDashboard`
-- `betaUserProfile`
-- `experimentalSearch`
-
-### Testing
-
-Test both enabled and disabled states:
+**Memoization**
 
 ```typescript
-// feature.test.tsx
-import { render } from "@testing-library/react";
-import { FeatureFlagProvider } from "@flagpole/react";
+import React, { memo, useMemo } from "react";
+import { useFeatureFlag, useFeatureFlags } from "@flagpole/react";
 
-const MockFeatureFlagProvider = ({ children, flags = {} }) => {
-  // Mock provider for testing
-  return (
-    <FeatureFlagProvider apiKey="test-key">{children}</FeatureFlagProvider>
-  );
-};
+const ExpensiveFeatureComponent = memo(() => {
+  const isEnabled = useFeatureFlag("expensiveFeature");
 
-describe("FeatureComponent", () => {
-  it("shows new feature when flag is enabled", () => {
-    // Mock the flag as enabled
-    const { getByText } = render(
-      <MockFeatureFlagProvider>
-        <FeatureComponent />
-      </MockFeatureFlagProvider>
-    );
+  const expensiveCalculation = useMemo(() => {
+    if (!isEnabled) return null;
 
-    expect(getByText("New Feature")).toBeInTheDocument();
-  });
+    // Only run expensive calculation when feature is enabled
+    return performExpensiveCalculation();
+  }, [isEnabled]);
 
-  it("hides new feature when flag is disabled", () => {
-    // Mock the flag as disabled
-    const { queryByText } = render(
-      <MockFeatureFlagProvider>
-        <FeatureComponent />
-      </MockFeatureFlagProvider>
-    );
+  if (!isEnabled) return null;
 
-    expect(queryByText("New Feature")).not.toBeInTheDocument();
-  });
+  return <div>{expensiveCalculation}</div>;
 });
 ```
 
-### TypeScript Support
-
-Define flag types for better type safety:
-
-```typescript
-// types/flags.ts
-export interface FeatureFlags {
-  newDashboard: boolean;
-  betaFeatures: boolean;
-  premiumContent: boolean;
-  experimentalSearch: boolean;
-}
-
-// Custom hook with type safety
-export const useTypedFeatureFlag = <K extends keyof FeatureFlags>(
-  flagKey: K
-): boolean => {
-  return useFeatureFlag(flagKey);
-};
-
-// Usage
-const isNewDashboardEnabled = useTypedFeatureFlag("newDashboard"); // Fully typed
-```
-
-### Performance Considerations
-
-- Use React.memo for components that depend on feature flags
-- Avoid creating new objects in render methods
-- Consider lazy loading components behind feature flags
+**Lazy Loading**
 
 ```typescript
 import { lazy, Suspense } from "react";
 import { useFeatureFlag } from "@flagpole/react";
 
-// Lazy load expensive components
+// Lazy load components behind feature flags
 const ExpensiveFeature = lazy(() => import("./ExpensiveFeature"));
+const BetaFeature = lazy(() => import("./BetaFeature"));
 
-const OptimizedFeatureComponent = () => {
-  const isEnabled = useFeatureFlag("expensiveFeature");
-
-  if (!isEnabled) return null;
+const OptimizedApp = () => {
+  const showExpensiveFeature = useFeatureFlag("expensiveFeature");
+  const showBetaFeature = useFeatureFlag("betaFeature");
 
   return (
-    <Suspense fallback={<div>Loading feature...</div>}>
-      <ExpensiveFeature />
-    </Suspense>
+    <div>
+      <StandardFeatures />
+
+      {showExpensiveFeature && (
+        <Suspense fallback={<div>Loading feature...</div>}>
+          <ExpensiveFeature />
+        </Suspense>
+      )}
+
+      {showBetaFeature && (
+        <Suspense fallback={<div>Loading beta...</div>}>
+          <BetaFeature />
+        </Suspense>
+      )}
+    </div>
   );
 };
 ```
 
-### Error Boundaries
+### 4. Flag Naming Conventions
 
-Wrap feature flag components in error boundaries:
+Use consistent, descriptive names:
+
+```typescript
+// ✅ Good naming
+const isNewDashboardEnabled = useFeatureFlag("newDashboard");
+const showBetaUserProfile = useFeatureFlag("betaUserProfile");
+const enableExperimentalSearch = useFeatureFlag("experimentalSearch");
+const allowPremiumFeatures = useFeatureFlag("premiumFeatures");
+
+// ❌ Bad naming
+const flag1 = useFeatureFlag("f1");
+const test = useFeatureFlag("test");
+const thing = useFeatureFlag("new_thing");
+```
+
+**Naming Guidelines:**
+
+- Use camelCase
+- Be specific and descriptive
+- Include feature context
+- Avoid abbreviations
+- Use verbs for actions: `enableX`, `showY`, `allowZ`
+
+### 5. Error Boundaries
+
+Wrap feature components in error boundaries:
 
 ```typescript
 class FeatureFlagErrorBoundary extends React.Component {
@@ -501,13 +735,18 @@ class FeatureFlagErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("Feature flag error:", error, errorInfo);
+
+    // Log to your error reporting service
+    // logErrorToService(error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div>Something went wrong with feature flags.</div>
+          <div className="error-fallback">
+            Something went wrong with this feature.
+          </div>
         )
       );
     }
@@ -527,3 +766,682 @@ const App = () => {
   );
 };
 ```
+
+## TypeScript Support
+
+### Type-Safe Feature Flags
+
+Define flag types for better development experience:
+
+```typescript
+// types/flags.ts
+export interface FeatureFlags {
+  newDashboard: boolean;
+  betaFeatures: boolean;
+  premiumContent: boolean;
+  experimentalSearch: boolean;
+  adminPanel: boolean;
+  darkMode: boolean;
+}
+
+export type FeatureFlagName = keyof FeatureFlags;
+
+// Custom typed hook
+export const useTypedFeatureFlag = <K extends FeatureFlagName>(
+  flagKey: K
+): FeatureFlags[K] => {
+  return useFeatureFlag(flagKey);
+};
+
+// Usage with full type safety
+const Component = () => {
+  const isNewDashboardEnabled = useTypedFeatureFlag("newDashboard"); // boolean
+  const showBetaFeatures = useTypedFeatureFlag("betaFeatures"); // boolean
+
+  // TypeScript will error on invalid flag names
+  // const invalid = useTypedFeatureFlag('invalidFlag'); // ❌ TypeScript error
+
+  return (
+    <div>
+      {isNewDashboardEnabled && <NewDashboard />}
+      {showBetaFeatures && <BetaFeatures />}
+    </div>
+  );
+};
+```
+
+### Typed Feature Flag Context
+
+Create a strongly typed context:
+
+```typescript
+// contexts/FeatureFlags.tsx
+import { createContext, useContext } from "react";
+import { FeatureFlags, FeatureFlagName } from "../types/flags";
+
+interface TypedFeatureFlagContext {
+  flags: Partial<FeatureFlags>;
+  isFeatureEnabled: <K extends FeatureFlagName>(flagName: K) => boolean;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+const TypedFeatureFlagContext = createContext<TypedFeatureFlagContext | null>(
+  null
+);
+
+export const useTypedFeatureFlags = () => {
+  const context = useContext(TypedFeatureFlagContext);
+  if (!context) {
+    throw new Error(
+      "useTypedFeatureFlags must be used within TypedFeatureFlagProvider"
+    );
+  }
+  return context;
+};
+```
+
+## Testing
+
+### Unit Testing with Jest
+
+```typescript
+// __tests__/FeatureComponent.test.tsx
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { FeatureFlagProvider } from "@flagpole/react";
+import { FeatureComponent } from "../FeatureComponent";
+
+// Mock the provider for testing
+const MockFeatureFlagProvider = ({
+  children,
+  mockFlags = {},
+  mockLoading = false,
+  mockError = null,
+}) => {
+  // In a real implementation, you'd mock the provider
+  // This is a simplified example
+  return (
+    <FeatureFlagProvider apiKey="test-key">{children}</FeatureFlagProvider>
+  );
+};
+
+describe("FeatureComponent", () => {
+  it("shows new feature when flag is enabled", () => {
+    render(
+      <MockFeatureFlagProvider mockFlags={{ newFeature: true }}>
+        <FeatureComponent />
+      </MockFeatureFlagProvider>
+    );
+
+    expect(screen.getByText("New Feature")).toBeInTheDocument();
+  });
+
+  it("hides new feature when flag is disabled", () => {
+    render(
+      <MockFeatureFlagProvider mockFlags={{ newFeature: false }}>
+        <FeatureComponent />
+      </MockFeatureFlagProvider>
+    );
+
+    expect(screen.queryByText("New Feature")).not.toBeInTheDocument();
+  });
+
+  it("shows loading state", () => {
+    render(
+      <MockFeatureFlagProvider mockLoading={true}>
+        <FeatureComponent />
+      </MockFeatureFlagProvider>
+    );
+
+    expect(screen.getByText("Loading flags...")).toBeInTheDocument();
+  });
+
+  it("shows error state", () => {
+    const error = new Error("Connection failed");
+
+    render(
+      <MockFeatureFlagProvider mockError={error}>
+        <FeatureComponent />
+      </MockFeatureFlagProvider>
+    );
+
+    expect(screen.getByText("Error: Connection failed")).toBeInTheDocument();
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+// __tests__/integration.test.tsx
+import React from "react";
+import { render, waitFor, screen } from "@testing-library/react";
+import { FeatureFlagProvider } from "@flagpole/react";
+import { App } from "../App";
+
+// Mock the WebSocket and API calls
+jest.mock("socket.io-client");
+jest.mock("axios");
+
+describe("App Integration", () => {
+  beforeEach(() => {
+    // Setup mocks
+    fetchMock.resetMocks();
+  });
+
+  it("loads and displays features based on flags", async () => {
+    // Mock API response
+    fetchMock.mockResponseOnce(
+      JSON.stringify([
+        {
+          name: "newDashboard",
+          isEnabled: true,
+          environments: ["development"],
+        },
+      ])
+    );
+
+    render(
+      <FeatureFlagProvider apiKey="test-key" environments={["development"]}>
+        <App />
+      </FeatureFlagProvider>
+    );
+
+    // Wait for flags to load
+    await waitFor(() => {
+      expect(screen.getByText("New Dashboard")).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Testing Custom Hooks
+
+```typescript
+// __tests__/useFeatureFlag.test.tsx
+import { renderHook } from "@testing-library/react";
+import { useFeatureFlag } from "@flagpole/react";
+import { MockFeatureFlagProvider } from "./test-utils";
+
+describe("useFeatureFlag", () => {
+  it("returns true when flag is enabled", () => {
+    const wrapper = ({ children }) => (
+      <MockFeatureFlagProvider mockFlags={{ testFlag: true }}>
+        {children}
+      </MockFeatureFlagProvider>
+    );
+
+    const { result } = renderHook(() => useFeatureFlag("testFlag"), {
+      wrapper,
+    });
+
+    expect(result.current).toBe(true);
+  });
+
+  it("returns false when flag is disabled", () => {
+    const wrapper = ({ children }) => (
+      <MockFeatureFlagProvider mockFlags={{ testFlag: false }}>
+        {children}
+      </MockFeatureFlagProvider>
+    );
+
+    const { result } = renderHook(() => useFeatureFlag("testFlag"), {
+      wrapper,
+    });
+
+    expect(result.current).toBe(false);
+  });
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. "useFeatureFlag must be used within a FeatureFlagProvider"
+
+**Problem**: Hook is used outside of provider context.
+
+**Solution**: Ensure your component is wrapped in `FeatureFlagProvider`:
+
+```typescript
+// ❌ Incorrect - no provider
+function App() {
+  return <MyComponent />; // Will throw error
+}
+
+// ✅ Correct - wrapped in provider
+function App() {
+  return (
+    <FeatureFlagProvider apiKey="your-key">
+      <MyComponent />
+    </FeatureFlagProvider>
+  );
+}
+```
+
+#### 2. Flags Always Return False
+
+**Possible causes:**
+
+- Invalid API key
+- Wrong environment configuration
+- Network connectivity issues
+- Flag doesn't exist in the specified environment
+
+**Debug steps:**
+
+```typescript
+function DebugComponent() {
+  const { flags, error, isLoading } = useFeatureFlags();
+
+  console.log("Debug info:", {
+    flags,
+    error,
+    isLoading,
+    flagCount: Object.keys(flags).length,
+  });
+
+  return (
+    <div>
+      <h3>Debug Information</h3>
+      <pre>{JSON.stringify({ flags, error, isLoading }, null, 2)}</pre>
+    </div>
+  );
+}
+```
+
+#### 3. WebSocket Connection Issues
+
+**Check network configuration:**
+
+```typescript
+// Add connection monitoring
+function ConnectionMonitor() {
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    // Monitor WebSocket connection status
+    // This would depend on your specific implementation
+  }, []);
+
+  return (
+    <div
+      className={`connection-status ${
+        connected ? "connected" : "disconnected"
+      }`}
+    >
+      {connected ? "🟢 Connected" : "🔴 Disconnected"}
+    </div>
+  );
+}
+```
+
+#### 4. Performance Issues
+
+**Solution**: Use React.memo and useMemo for expensive operations:
+
+```typescript
+const OptimizedComponent = React.memo(() => {
+  const isEnabled = useFeatureFlag("expensiveFeature");
+
+  const expensiveValue = useMemo(() => {
+    if (!isEnabled) return null;
+    return computeExpensiveValue();
+  }, [isEnabled]);
+
+  return isEnabled ? <ExpensiveFeature value={expensiveValue} /> : null;
+});
+```
+
+### Debug Mode
+
+Enable debug mode in development:
+
+```typescript
+// Add to your main App component
+function App() {
+  const { flags, error, isLoading } = useFeatureFlags();
+
+  // Log flag changes in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.group("[FlagPole Debug]");
+      console.log("Flags loaded:", flags);
+      console.log("Loading:", isLoading);
+      console.log("Error:", error);
+      console.groupEnd();
+    }
+  }, [flags, isLoading, error]);
+
+  return <YourApp />;
+}
+```
+
+### Network Monitoring
+
+```typescript
+function NetworkStatus() {
+  const [online, setOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (!online) {
+    return (
+      <div className="offline-banner">
+        ⚠️ You're offline. Feature flags may not update in real-time.
+      </div>
+    );
+  }
+
+  return null;
+}
+```
+
+## Migration from Other Solutions
+
+### From LaunchDarkly
+
+```typescript
+// LaunchDarkly
+import { useFlags, useLDClient } from "launchdarkly-react-client-sdk";
+
+const { featureFlag } = useFlags();
+
+// FlagPole equivalent
+import { useFeatureFlag } from "@flagpole/react";
+
+const featureFlag = useFeatureFlag("featureFlagName");
+```
+
+### From Split
+
+```typescript
+// Split
+import {
+  useSplitClient,
+  useSplitTreatments,
+} from "@splitsoftware/splitio-react";
+
+const client = useSplitClient();
+const treatments = useSplitTreatments(["feature1", "feature2"]);
+
+// FlagPole equivalent
+import { useFeatureFlag, useFeatureFlags } from "@flagpole/react";
+
+const feature1Enabled = useFeatureFlag("feature1");
+const feature2Enabled = useFeatureFlag("feature2");
+// Or get all at once
+const { isFeatureEnabled } = useFeatureFlags();
+```
+
+### From Custom Solutions
+
+```typescript
+// Custom feature flag hook
+const useCustomFeatureFlag = (flagName) => {
+  return window.featureFlags?.[flagName] || false;
+};
+
+// Migrate to FlagPole
+import { useFeatureFlag } from "@flagpole/react";
+
+const useFeatureFlag = (flagName) => {
+  return useFeatureFlag(flagName);
+};
+```
+
+## Advanced Patterns
+
+### Feature Flag Middleware
+
+Create middleware to log flag usage:
+
+```typescript
+import { useFeatureFlag as originalUseFeatureFlag } from "@flagpole/react";
+
+// Wrapper hook with analytics
+export const useFeatureFlag = (flagName: string) => {
+  const isEnabled = originalUseFeatureFlag(flagName);
+
+  useEffect(() => {
+    // Log flag usage for analytics
+    analytics.track("feature_flag_checked", {
+      flagName,
+      isEnabled,
+      timestamp: new Date().toISOString(),
+    });
+  }, [flagName, isEnabled]);
+
+  return isEnabled;
+};
+```
+
+### Progressive Enhancement
+
+Gracefully enhance features:
+
+```typescript
+const ProgressiveFeature = () => {
+  const hasAdvancedFeature = useFeatureFlag("advancedFeature");
+  const hasBetaUI = useFeatureFlag("betaUI");
+
+  // Start with basic feature
+  let FeatureComponent = BasicFeature;
+
+  // Progressively enhance
+  if (hasAdvancedFeature) {
+    FeatureComponent = AdvancedFeature;
+  }
+
+  if (hasBetaUI) {
+    FeatureComponent = BetaUIFeature;
+  }
+
+  return <FeatureComponent />;
+};
+```
+
+### Feature Flag Composition
+
+Compose complex feature logic:
+
+```typescript
+interface FeatureConfig {
+  showNewUI: boolean;
+  enableBetaFeatures: boolean;
+  allowPremiumContent: boolean;
+  experimentVariant: "A" | "B" | "control";
+}
+
+const useFeatureConfig = (): FeatureConfig => {
+  const { flags } = useFeatureFlags();
+
+  return useMemo(
+    () => ({
+      showNewUI: flags.newUI?.isEnabled || false,
+      enableBetaFeatures: flags.betaFeatures?.isEnabled || false,
+      allowPremiumContent: flags.premiumContent?.isEnabled || false,
+      experimentVariant: flags.experiment?.conditions?.variant || "control",
+    }),
+    [flags]
+  );
+};
+
+// Usage
+const MyComponent = () => {
+  const config = useFeatureConfig();
+
+  return (
+    <div>
+      {config.showNewUI && <NewUIComponent />}
+      {config.enableBetaFeatures && <BetaFeatures />}
+      {config.allowPremiumContent && <PremiumContent />}
+      <ExperimentComponent variant={config.experimentVariant} />
+    </div>
+  );
+};
+```
+
+### Server-Side Rendering (SSR)
+
+Handle SSR with Next.js:
+
+```typescript
+// pages/_app.tsx
+import { FeatureFlagProvider } from "@flagpole/react";
+
+function MyApp({ Component, pageProps, featureFlags }) {
+  return (
+    <FeatureFlagProvider
+      apiKey={process.env.NEXT_PUBLIC_FLAGPOLE_API_KEY}
+      initialFlags={featureFlags} // Prevent hydration mismatch
+    >
+      <Component {...pageProps} />
+    </FeatureFlagProvider>
+  );
+}
+
+// Pre-fetch flags on server
+MyApp.getInitialProps = async (ctx) => {
+  const featureFlags = await fetchFeatureFlags({
+    apiKey: process.env.FLAGPOLE_API_KEY,
+    environments: [process.env.NODE_ENV],
+  });
+
+  return { featureFlags };
+};
+
+export default MyApp;
+```
+
+### Micro-frontend Integration
+
+Share flags across micro-frontends:
+
+```typescript
+// shared-flags.ts
+class SharedFeatureFlags {
+  private static instance: SharedFeatureFlags;
+  private flags: Record<string, boolean> = {};
+
+  static getInstance() {
+    if (!SharedFeatureFlags.instance) {
+      SharedFeatureFlags.instance = new SharedFeatureFlags();
+    }
+    return SharedFeatureFlags.instance;
+  }
+
+  setFlags(flags: Record<string, boolean>) {
+    this.flags = { ...this.flags, ...flags };
+    window.dispatchEvent(
+      new CustomEvent("flagsUpdated", { detail: this.flags })
+    );
+  }
+
+  getFlag(name: string): boolean {
+    return this.flags[name] || false;
+  }
+}
+
+// In each micro-frontend
+const sharedFlags = SharedFeatureFlags.getInstance();
+
+const useMicroFrontendFlag = (flagName: string) => {
+  const [isEnabled, setIsEnabled] = useState(sharedFlags.getFlag(flagName));
+
+  useEffect(() => {
+    const handleFlagsUpdate = (event: CustomEvent) => {
+      setIsEnabled(event.detail[flagName] || false);
+    };
+
+    window.addEventListener("flagsUpdated", handleFlagsUpdate);
+    return () => window.removeEventListener("flagsUpdated", handleFlagsUpdate);
+  }, [flagName]);
+
+  return isEnabled;
+};
+```
+
+## Resources
+
+### Documentation Links
+
+- [FlagPole Dashboard](https://useflagpole.dev)
+- [API Documentation](https://docs.flagpole.dev/api)
+- [SDK Source Code](https://github.com/flagpole-corp/flagpole-client-sdk-react)
+
+### Community
+
+- [Discord Community](https://discord.gg/flagpole)
+- [GitHub Discussions](https://github.com/flagpole-corp/flagpole-client-sdk-react/discussions)
+- [Stack Overflow](https://stackoverflow.com/questions/tagged/flagpole)
+
+### Examples
+
+- [React Example App](https://github.com/flagpole-corp/examples/tree/main/react)
+- [Next.js Integration](https://github.com/flagpole-corp/examples/tree/main/nextjs)
+- [TypeScript Examples](https://github.com/flagpole-corp/examples/tree/main/typescript)
+
+## Contributing
+
+We welcome contributions to the React SDK! Here's how you can help:
+
+### Development Setup
+
+```bash
+git clone https://github.com/flagpole-corp/flagpole-client-sdk-react.git
+cd flagpole-client-sdk-react
+npm install
+npm run build:watch
+```
+
+### Testing Your Changes
+
+```bash
+# Run tests
+npm test
+
+# Test with example app
+cd examples/react-example
+npm install
+npm start
+```
+
+### Submitting Changes
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+ISC
+
+## Support
+
+Need help? We're here for you:
+
+- 📧 **Email**: support@flagpole.dev
+- 💬 **Discord**: [Join our community](https://discord.gg/flagpole)
+- 📖 **Documentation**: [docs.flagpole.dev](https://docs.flagpole.dev)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/flagpole-corp/flagpole-client-sdk-react/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/flagpole-corp/flagpole-client-sdk-react/discussions)
+
+---
+
+Built with ❤️ by the FlagPole team. Happy feature flagging! 🚀
