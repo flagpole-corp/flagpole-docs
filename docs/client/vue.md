@@ -3,21 +3,59 @@ id: vue
 title: Vue
 ---
 
-# Vue SDK Integration
+# Vue
 
-### 3. Install the SDK
+A Vue 3 SDK for integrating feature flags into your application with real-time updates, composables, a directive, and a plugin for global usage.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Advanced Usage](#advanced-usage)
+- [Configuration](#configuration)
+- [Error Handling](#error-handling)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+## Features
+
+- 🚀 **Real-time Updates**: WebSocket integration for instant feature flag changes
+- 🧩 **Composition API**: `useFeatureFlag` and `useFeatureFlags` composables built for Vue 3
+- 🎯 **Directive**: `v-feature-flag` for declarative show/hide, with a `:not` modifier
+- 🔌 **Plugin**: `createFlagpole` for global `$isFeatureEnabled` access
+- 🌍 **Environment Support**: Filter flags by environment (development, staging, production)
+- 📊 **TypeScript**: Full type safety with computed refs
+- 🖥️ **SSR Compatible**: Works with Nuxt.js and other SSR frameworks
+
+## Installation
+
+### NPM
 
 ```bash
-# Using npm
 npm install @flagpole/client-vue socket.io-client
+```
 
-# Using yarn
+### Yarn
+
+```bash
 yarn add @flagpole/client-vue socket.io-client
 ```
 
-### 4. Initialize in Your Application
+### Requirements
 
-#### Method 1: Using the Plugin (Recommended)
+- Vue >= 3.3.0
+- Node.js >= 16
+- socket.io-client >= 4.7.2
+- A modern browser with WebSocket support
+
+## Quick Start
+
+### 1. Install the Plugin
+
+Register the plugin in your app entry point with your project's API key (available from the FlagPole dashboard):
 
 ```typescript
 // main.ts
@@ -37,7 +75,7 @@ app.use(
 app.mount("#app");
 ```
 
-#### Method 2: Using the Provider Component
+Alternatively, wrap your app with the `FeatureFlagProvider` component:
 
 ```vue
 <!-- App.vue -->
@@ -56,7 +94,7 @@ import FeatureComponent from "./components/FeatureComponent.vue";
 </script>
 ```
 
-### 5. Use Feature Flags
+### 2. Use Feature Flags
 
 #### Composition API Usage
 
@@ -198,7 +236,28 @@ const handleGlobalAction = () => {
 </script>
 ```
 
-## Available APIs
+### 3. Handle Loading & Error States
+
+Gate feature content on `isLoading` and `error` from `useFeatureFlags`:
+
+```vue
+<template>
+  <div v-if="isLoading" class="loading">Loading feature flags...</div>
+  <div v-else-if="error" class="error">Error loading flags: {{ error.message }}</div>
+  <div v-else>
+    <NewCheckout v-if="isFeatureEnabled('new-checkout')" />
+    <LegacyCheckout v-else />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useFeatureFlags } from "@flagpole/client-vue";
+
+const { isLoading, error, isFeatureEnabled } = useFeatureFlags();
+</script>
+```
+
+## API Reference
 
 ### Composables
 
@@ -239,7 +298,7 @@ Use the `v-feature-flag` directive to conditionally show/hide elements:
 
 ### Plugin
 
-Install globally with the plugin:
+Install globally with the plugin to enable `$isFeatureEnabled` in every component:
 
 ```typescript
 import { createFlagpole } from "@flagpole/client-vue";
@@ -262,7 +321,7 @@ Alternative setup using the provider component:
 </FeatureFlagProvider>
 ```
 
-## Advanced Usage Patterns
+## Advanced Usage
 
 ### Custom Composable for Complex Logic
 
@@ -451,13 +510,44 @@ const themeClasses = computed(() => ({
 </style>
 ```
 
-## Best Practices
-
-### API Key Security
-
-Store API keys in environment variables:
+### SSR Support (Nuxt.js)
 
 ```typescript
+// plugins/flagpole.client.ts
+import { createFlagpole } from "@flagpole/client-vue";
+
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.use(
+    createFlagpole({
+      apiKey: useRuntimeConfig().public.flagpoleApiKey,
+      environments: [useRuntimeConfig().public.environment],
+    })
+  );
+});
+```
+
+## Configuration
+
+### FlagpoleConfig
+
+```typescript
+interface FlagpoleConfig {
+  apiKey: string;
+  environments?: string[]; // 'development' | 'staging' | 'production'
+}
+```
+
+If `environments` is omitted, flags from all environments are loaded.
+
+### Environment Variables
+
+Keep API keys out of source control by reading them from Vite's environment variables:
+
+```typescript
+// .env
+VITE_FLAGPOLE_API_KEY=fp_live_your_api_key_here
+VITE_ENVIRONMENT=development
+
 // main.ts
 app.use(
   createFlagpole({
@@ -469,6 +559,164 @@ app.use(
 );
 ```
 
-### Error Handling
+### Type-Safe Feature Flags
 
-Implement comprehensive error handling:
+```typescript
+// types/flags.ts
+import type { ComputedRef } from "vue";
+import { useFeatureFlag } from "@flagpole/client-vue";
+
+export interface AppFeatureFlags {
+  newDashboard: boolean;
+  premiumFeatures: boolean;
+  betaAccess: boolean;
+}
+
+// Custom typed composable
+export function useTypedFeatureFlag<K extends keyof AppFeatureFlags>(
+  flagKey: K
+): ComputedRef<boolean> {
+  return useFeatureFlag(flagKey);
+}
+```
+
+## Error Handling
+
+### Loading and Error States
+
+Always render loading and error states from `useFeatureFlags`:
+
+```vue
+<template>
+  <div v-if="isLoading">Loading...</div>
+  <div v-else-if="error" class="error">
+    Feature flags unavailable: {{ error.message }}
+  </div>
+  <OnlineFeatures v-else />
+</template>
+
+<script setup lang="ts">
+import { useFeatureFlags } from "@flagpole/client-vue";
+
+const { isLoading, error } = useFeatureFlags();
+</script>
+```
+
+### Flag Not Found
+
+`useFeatureFlag` returns a computed ref that resolves to `false` for flags that don't exist — no additional error handling is needed. The SDK also fails safe (all flags `false`) when the connection drops or the API key is invalid.
+
+## Best Practices
+
+### 1. Secure Your API Key
+
+- Store API keys in environment variables, never in source control
+- Use different keys for development, staging, and production
+- Rotate keys if they're ever exposed
+
+### 2. Always Handle Loading and Error States
+
+Branch on `isLoading` and `error` so components react to connection changes rather than assuming flags are ready.
+
+### 3. Use Descriptive Flag Names
+
+Use consistent, specific camelCase names:
+
+- ✅ `newDashboard`, `betaUserProfile`, `experimentalSearch`
+- ❌ `flag1`, `test`
+
+### 4. Prefer Composables Over Global Methods
+
+`useFeatureFlag` / `useFeatureFlags` are reactive and tree-shakeable. Reserve `$isFeatureEnabled` for cases where you can't use the Composition API (e.g. router guards).
+
+### 5. Default to the Safe Path
+
+Always provide a fallback so a disabled or missing flag degrades gracefully:
+
+```vue
+<template>
+  <PremiumUI v-if="isPremiumEnabled" />
+  <StandardUI v-else />
+</template>
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. "useFeatureFlags must be used within a FeatureFlagProvider"
+
+**Solution**: Register the SDK before using any composable — either `app.use(createFlagpole({ ... }))` in `main.ts`, or wrap your tree in `<FeatureFlagProvider>`.
+
+#### 2. Flags Always Return False
+
+**Possible causes:**
+
+- Invalid API key
+- Wrong environment configuration
+- Network connectivity issues
+
+**Solution**: Log the service state to confirm what the SDK received:
+
+```vue
+<script setup lang="ts">
+import { watchEffect } from "vue";
+import { useFeatureFlags } from "@flagpole/client-vue";
+
+const { flags, error, isLoading } = useFeatureFlags();
+
+watchEffect(() => {
+  console.log("Flags:", flags.value);
+  console.log("Error:", error.value);
+  console.log("Loading:", isLoading.value);
+});
+</script>
+```
+
+#### 3. WebSocket Connection Issues
+
+Ensure the WebSocket endpoints are reachable from your environment:
+
+```text
+Development: ws://localhost:5000
+Production:  wss://useflagpole-api.onrender.com
+```
+
+#### 4. Flags Not Reactive in Templates
+
+Access `useFeatureFlag` results with `.value` in `<script>`, and bind the ref directly (not `.value`) in `<template>`. Don't destructure `flags.value` outside a `computed`.
+
+## Contributing
+
+We welcome contributions! To set up the SDK locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/flagpole-corp/flagpole-client-sdk-vue.git
+cd flagpole-client-sdk-vue
+
+# Install dependencies
+npm install
+
+# Build the SDK
+npm run build
+```
+
+### Submitting Changes
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+MIT
+
+## Support
+
+- 📧 Email: support@useflagpole.dev
+- 📚 Documentation: https://docs.useflagpole.dev
+- 🐛 Issues: https://github.com/flagpole-corp/flagpole-client-sdk-vue/issues
+- 💬 Discord: https://discord.gg/flagpole

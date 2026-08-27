@@ -3,19 +3,59 @@ id: angular
 title: Angular
 ---
 
-# Angular SDK Integration
+# Angular
 
-### 3. Install the SDK
+An Angular SDK for integrating feature flags into your application with real-time updates, structural directives, pipes, and route guards.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+- [Advanced Usage](#advanced-usage)
+- [Configuration](#configuration)
+- [Error Handling](#error-handling)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+## Features
+
+- 🚀 **Real-time Updates**: WebSocket integration for instant feature flag changes
+- 🧩 **Structural Directive**: `*flagpoleFeature` for declarative show/hide with fallback templates
+- 🔧 **Pipe**: `featureFlag` pipe for inline checks and conditional classes
+- 🛡️ **Route Guards**: `FeatureFlagGuard` to protect routes behind flags
+- 🌍 **Environment Support**: Filter flags by environment (development, staging, production)
+- 📊 **TypeScript**: Full type safety with RxJS observables
+- ⚡ **Zero Config**: Works out of the box with sensible defaults
+
+## Installation
+
+### NPM
 
 ```bash
-# Using npm
 npm install @flagpole/angular socket.io-client
+```
 
-# Using yarn
+### Yarn
+
+```bash
 yarn add @flagpole/angular socket.io-client
 ```
 
-### 4. Initialize in Your Application
+### Requirements
+
+- Angular >= 15.0.0
+- RxJS >= 7.5.0
+- TypeScript >= 4.8.0
+- socket.io-client >= 4.7.2
+
+## Quick Start
+
+### 1. Register the Module
+
+Import `FeatureFlagModule.forRoot()` in your root module with your project's API key (available from the FlagPole dashboard):
 
 ```typescript
 // app.module.ts
@@ -39,7 +79,7 @@ import { AppComponent } from "./app.component";
 export class AppModule {}
 ```
 
-### 5. Use Feature Flags
+### 2. Use Feature Flags
 
 #### Template Usage
 
@@ -132,7 +172,32 @@ export class FeatureComponent implements OnInit {
 }
 ```
 
-## Available APIs
+### 3. Handle Loading & Error States
+
+Subscribe to the service observables and gate your feature content until flags are ready:
+
+```html
+<!-- Loading state -->
+<div *ngIf="isLoading$ | async" class="loading">
+  <mat-spinner></mat-spinner>
+  Loading feature flags...
+</div>
+
+<!-- Error state -->
+<div *ngIf="error$ | async as error" class="error-banner">
+  <mat-icon>error</mat-icon>
+  Failed to load feature flags: {{ error.message }}
+</div>
+
+<!-- Content when loaded -->
+<div *ngIf="!(isLoading$ | async) && !(error$ | async)">
+  <div *flagpoleFeature="'newFeature'">
+    <app-new-feature></app-new-feature>
+  </div>
+</div>
+```
+
+## API Reference
 
 ### FeatureFlagService
 
@@ -191,7 +256,7 @@ Use the `featureFlag` pipe for inline flag checks:
 
 ### Route Guards
 
-Protect routes based on feature flags:
+Protect routes based on feature flags with `FeatureFlagGuard`:
 
 ```typescript
 // app-routing.module.ts
@@ -228,63 +293,11 @@ const routes: Routes = [
 export class AppRoutingModule {}
 ```
 
-## Best Practices
-
-### API Key Security
-
-- Store API keys in environment variables
-- Use different keys for different environments
-- Never commit API keys to source control
-- Rotate keys if they're ever exposed
-
-```typescript
-// Example using environment variables
-// environment.ts
-export const environment = {
-  production: false,
-  flagpoleApiKey: "fp_dev_your_dev_api_key",
-};
-
-// app.module.ts
-import { environment } from "../environments/environment";
-
-@NgModule({
-  imports: [
-    FeatureFlagModule.forRoot({
-      apiKey: environment.flagpoleApiKey,
-      environments: ["development"],
-    }),
-  ],
-})
-export class AppModule {}
-```
-
-### Error Handling
-
-Always handle loading and error states in your templates:
-
-```html
-<!-- Loading state -->
-<div *ngIf="isLoading$ | async" class="loading">
-  <mat-spinner></mat-spinner>
-  Loading feature flags...
-</div>
-
-<!-- Error state -->
-<div *ngIf="error$ | async as error" class="error-banner">
-  <mat-icon>error</mat-icon>
-  Failed to load feature flags: {{ error.message }}
-</div>
-
-<!-- Content when loaded -->
-<div *ngIf="!(isLoading$ | async) && !(error$ | async)">
-  <!-- Your feature content here -->
-</div>
-```
+## Advanced Usage
 
 ### Reactive Patterns
 
-Leverage RxJS for reactive programming:
+Combine feature flags with other observables using RxJS:
 
 ```typescript
 import { Component } from "@angular/core";
@@ -319,23 +332,158 @@ export class DashboardComponent {
 }
 ```
 
-### Feature Flag Naming
+### A/B Testing Implementation
 
-Use descriptive, consistent names:
+Read the flag's conditions to branch between experiment variants:
 
-- Include feature context
-- Use camelCase
-- Be specific but concise
+```typescript
+import { Component } from "@angular/core";
+import { map } from "rxjs";
 
-Examples:
+@Component({
+  selector: "app-checkout",
+  template: `<ng-container [ngSwitch]="variant$ | async">
+    <app-checkout-v2 *ngSwitchCase="'variantA'"></app-checkout-v2>
+    <app-checkout-v3 *ngSwitchCase="'variantB'"></app-checkout-v3>
+    <app-checkout-v1 *ngSwitchDefault></app-checkout-v1>
+  </ng-container>`,
+})
+export class CheckoutComponent {
+  variant$ = this.featureFlagService.flags$.pipe(
+    map((flags) => flags["checkoutExperiment"]?.conditions?.variant ?? "control")
+  );
 
-- `newDashboard`
-- `betaUserProfile`
-- `experimentalSearch`
+  constructor(private featureFlagService: FeatureFlagService) {}
+}
+```
 
-### Testing
+### Real-time Updates
 
-Test both enabled and disabled states:
+The SDK keeps a WebSocket connection open and pushes flag changes into `flags$` automatically — any component using the `async` pipe or the `*flagpoleFeature` directive re-renders without a page reload.
+
+## Configuration
+
+### FeatureFlagConfig
+
+```typescript
+interface FeatureFlagConfig {
+  apiKey: string;
+  environments?: Environment[]; // 'development' | 'staging' | 'production'
+}
+```
+
+If `environments` is omitted, flags from all environments are loaded.
+
+### Environment Variables
+
+Keep API keys out of source control by reading them from the Angular environment files:
+
+```typescript
+// environment.ts
+export const environment = {
+  production: false,
+  flagpoleApiKey: "fp_dev_your_dev_api_key",
+};
+
+// app.module.ts
+import { environment } from "../environments/environment";
+
+@NgModule({
+  imports: [
+    FeatureFlagModule.forRoot({
+      apiKey: environment.flagpoleApiKey,
+      environments: ["development"],
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+## Error Handling
+
+### Loading and Error States
+
+Always render loading and error states from the service observables:
+
+```html
+<!-- Loading state -->
+<div *ngIf="isLoading$ | async" class="loading">
+  <mat-spinner></mat-spinner>
+  Loading feature flags...
+</div>
+
+<!-- Error state -->
+<div *ngIf="error$ | async as error" class="error-banner">
+  <mat-icon>error</mat-icon>
+  Failed to load feature flags: {{ error.message }}
+</div>
+
+<!-- Content when loaded -->
+<div *ngIf="!(isLoading$ | async) && !(error$ | async)">
+  <!-- Your feature content here -->
+</div>
+```
+
+### Flag Not Found
+
+`isFeatureEnabled` returns `false` for flags that don't exist, and `getFlag` returns `null` — no extra error handling is required for missing flags. The SDK also fails safe (all flags `false`) when the connection drops or the API key is invalid.
+
+## Best Practices
+
+### 1. Secure Your API Key
+
+- Store API keys in environment variables, never in source control
+- Use different keys for development, staging, and production
+- Rotate keys if they're ever exposed
+
+### 2. Always Handle Loading and Error States
+
+Use the `async` pipe with `isLoading$` and `error$` so components react to connection changes instead of assuming flags are ready.
+
+### 3. Use Descriptive Flag Names
+
+Use consistent, specific camelCase names:
+
+- ✅ `newDashboard`, `betaUserProfile`, `experimentalSearch`
+- ❌ `flag1`, `test`
+
+### 4. Optimize Change Detection
+
+- Use the `OnPush` change detection strategy where possible
+- Prefer the `async` pipe for automatic subscription management
+- Unsubscribe from manual subscriptions to prevent memory leaks
+
+```typescript
+@Component({
+  selector: "app-feature",
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div *flagpoleFeature="'newFeature'">
+      <!-- Content automatically updates when flag changes -->
+    </div>
+  `,
+})
+export class FeatureComponent implements OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  constructor(private featureFlagService: FeatureFlagService) {
+    this.featureFlagService.flags$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((flags) => {
+        // Handle flags update
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+### 5. Test Both Flag States
+
+Test enabled and disabled paths by mocking `FeatureFlagService`:
 
 ```typescript
 // feature.component.spec.ts
@@ -360,49 +508,83 @@ describe("FeatureComponent", () => {
 
   it("should show new feature when flag is enabled", () => {
     featureFlagService.isFeatureEnabled.and.returnValue(true);
-
     // Test enabled state
   });
 
   it("should hide new feature when flag is disabled", () => {
     featureFlagService.isFeatureEnabled.and.returnValue(false);
-
     // Test disabled state
   });
 });
 ```
 
-### Performance Considerations
+## Troubleshooting
 
-- Use `OnPush` change detection strategy when possible
-- Unsubscribe from observables to prevent memory leaks
-- Use the `async` pipe for automatic subscription management
+### Common Issues
+
+#### 1. `*flagpoleFeature` or `featureFlag` pipe is not recognized
+
+**Solution**: Ensure `FeatureFlagModule.forRoot({ ... })` is imported in your root module, and `FeatureFlagModule` is imported in any feature module that uses the directive or pipe.
+
+#### 2. Flags Always Return False
+
+**Possible causes:**
+
+- Invalid API key
+- Wrong environment configuration
+- Network connectivity issues
+
+**Solution**: Log the service state to confirm what the SDK received:
 
 ```typescript
-@Component({
-  selector: "app-feature",
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div *flagpoleFeature="'newFeature'">
-      <!-- Content automatically updates when flag changes -->
-    </div>
-  `,
-})
-export class FeatureComponent implements OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  constructor(private featureFlagService: FeatureFlagService) {
-    // Manual subscription example
-    this.featureFlagService.flags$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((flags) => {
-        // Handle flags update
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-}
+this.featureFlagService.flags$.subscribe((flags) => console.log("Flags:", flags));
+this.featureFlagService.error$.subscribe((error) => console.log("Error:", error));
 ```
+
+#### 3. WebSocket Connection Issues
+
+Ensure the WebSocket endpoints are reachable from your environment:
+
+```text
+Development: ws://localhost:5000
+Production:  wss://useflagpole-api.onrender.com
+```
+
+#### 4. Memory Leaks / Stale Subscriptions
+
+Use the `async` pipe, or `takeUntil(this.destroy$)` with `ngOnDestroy`, for every manual subscription to `flags$`, `isLoading$`, or `error$`.
+
+## Contributing
+
+We welcome contributions! To set up the SDK locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/flagpole-corp/flagpole-client-sdk-angular.git
+cd flagpole-client-sdk-angular
+
+# Install dependencies
+npm install
+
+# Build the SDK
+npm run build
+```
+
+### Submitting Changes
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+MIT
+
+## Support
+
+- 📧 Email: support@useflagpole.dev
+- 📚 Documentation: https://docs.useflagpole.dev
+- 🐛 Issues: https://github.com/flagpole-corp/flagpole-client-sdk-angular/issues
+- 💬 Discord: https://discord.gg/flagpole
