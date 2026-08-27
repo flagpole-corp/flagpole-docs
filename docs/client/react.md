@@ -9,6 +9,7 @@ The FlagPole React SDK provides seamless integration of feature flags into your 
 
 ## Table of Contents
 
+- [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [API Reference](#api-reference)
@@ -17,6 +18,15 @@ The FlagPole React SDK provides seamless integration of feature flags into your 
 - [TypeScript Support](#typescript-support)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
+
+## Features
+
+- 🚀 **Real-time Updates**: WebSocket integration for instant feature flag changes
+- 🪝 **Hooks API**: `useFeatureFlag` and `useFeatureFlags` for idiomatic React usage
+- 🧩 **HOC**: `withFeatureFlag` for conditional rendering with a fallback component
+- 🌍 **Environment Support**: Filter flags by environment (development, staging, production)
+- 📊 **TypeScript**: Full type safety and IntelliSense
+- ⚡ **Zero Config**: Works out of the box with sensible defaults
 
 ## Installation
 
