@@ -396,9 +396,12 @@ On the Android emulator, `localhost` refers to the emulator itself — point
 
 ## Contributing
 
+The SDK lives in the [`flagpole-sdks`](https://github.com/flagpole-corp/flagpole-sdks)
+monorepo under `packages/client/flutter`.
+
 ```bash
-git clone https://github.com/flagpole-corp/flagpole-client-sdk-flutter.git
-cd flagpole-client-sdk-flutter
+git clone https://github.com/flagpole-corp/flagpole-sdks.git
+cd flagpole-sdks/packages/client/flutter
 
 flutter pub get
 dart format .
@@ -414,5 +417,5 @@ MIT
 
 - 📧 Email: support@useflagpole.dev
 - 📚 Documentation: https://docs.useflagpole.dev
-- 🐛 Issues: https://github.com/flagpole-corp/flagpole-client-sdk-flutter/issues
+- 🐛 Issues: https://github.com/flagpole-corp/flagpole-sdks/issues
 - 💬 Discord: https://discord.gg/flagpole
