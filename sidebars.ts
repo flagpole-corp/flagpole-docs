@@ -24,7 +24,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Server SDKs",
-      items: ["server/nodejs", "server/python"],
+      items: ["server/nodejs", "server/python", "server/go"],
     },
   ],
 };

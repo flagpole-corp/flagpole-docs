@@ -95,6 +95,7 @@ API keys are essential for connecting your application to Flagpole:
 - Server Side
   - [NodeJS](server/nodejs)
   - [Python](server/python)
+  - [Go](server/go)
 
 ## Next Steps
 
