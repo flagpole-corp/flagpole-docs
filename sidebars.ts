@@ -20,6 +20,7 @@ const sidebars: SidebarsConfig = {
         "client/react-native",
         "client/flutter",
         "client/swift",
+        "client/kotlin",
       ],
     },
     {
