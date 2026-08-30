@@ -44,7 +44,7 @@ is then only what `start()` loaded plus any manual `refresh()`.
 ## Features
 
 - 🧵 **Coroutines-native**: `suspend` fetches, state as `StateFlow`
-- 🤖 **JVM & Android**: Java 11 bytecode, `HttpURLConnection` core — no OkHttp/Ktor
+- 🤖 **JVM & Android**: `HttpURLConnection` core — no OkHttp/Ktor
 - ⚡ **Non-blocking reads**: after `start()`, `isEnabled(...)` is a synchronous
   in-memory lookup
 - 🔁 **Polling**: configurable-interval REST refresh
@@ -64,8 +64,7 @@ dependencies {
 ### Requirements
 
 - Kotlin 1.9+
-- JVM 11+, or Android with AGP 4.2+ (enable core library desugaring for
-  `java.time` on `minSdk` < 26)
+- JVM 17+, or Android with AGP 8.1+
 
 `kotlinx-coroutines-core` comes in transitively.
 
