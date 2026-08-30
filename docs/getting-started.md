@@ -99,6 +99,7 @@ API keys are essential for connecting your application to Flagpole:
   - [Python](server/python)
   - [Go](server/go)
   - [Java](server/java)
+  - [.NET](server/dotnet)
 
 ## Next Steps
 
