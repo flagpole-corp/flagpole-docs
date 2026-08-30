@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
         "server/go",
         "server/java",
         "server/dotnet",
+        "server/php",
       ],
     },
   ],
