@@ -91,6 +91,7 @@ API keys are essential for connecting your application to Flagpole:
   - [Angular](client/angular)
   - [React-Native](client/react-native)
   - [Flutter](client/flutter)
+  - [Swift](client/swift)
 
 - Server Side
   - [NodeJS](server/nodejs)
