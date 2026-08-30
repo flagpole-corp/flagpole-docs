@@ -100,6 +100,7 @@ API keys are essential for connecting your application to Flagpole:
   - [Go](server/go)
   - [Java](server/java)
   - [.NET](server/dotnet)
+  - [PHP](server/php)
 
 ## Next Steps
 
